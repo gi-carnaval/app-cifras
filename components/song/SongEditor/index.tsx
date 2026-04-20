@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type KeyboardEvent } from 'react'
 import {
   formatChord,
+  parseChord,
 } from '@/core/chord-engine'
 import { Song } from '@/domain/entities/song'
 import CifraLine from '../CifraLine'
@@ -26,6 +27,7 @@ export default function SongEditor({ initialSong, onSave }: SongEditorProps) {
 
   const {
     song,
+    defaultKey,
     popup,
     popupInput,
     popupError,
@@ -41,6 +43,7 @@ export default function SongEditor({ initialSong, onSave }: SongEditorProps) {
 
     setPopupInput,
     setPopupError,
+    setDefaultKey,
 
     openPopup,
     closePopup,
@@ -56,8 +59,35 @@ export default function SongEditor({ initialSong, onSave }: SongEditorProps) {
     handleMoveChord,
     removeSection,
     updateSectionName,
-    createArtist
+    createArtist,
+    updateDefaultKey
   } = controller
+
+  function handleLyricsShortcut(
+    event: KeyboardEvent<HTMLTextAreaElement>,
+    sectionId: string,
+    lineId: string,
+  ) {
+    const isAddChordShortcut =
+      event.ctrlKey &&
+      event.shiftKey &&
+      event.key.toLowerCase() === 'c'
+
+    if (!isAddChordShortcut) return
+
+    const textarea = textareaRefs.current[lineId]
+    const cursorIndex = event.currentTarget.selectionStart
+    const isValidTextarea = textarea === event.currentTarget
+    const hasValidCursor =
+      Number.isInteger(cursorIndex) &&
+      cursorIndex >= 0 &&
+      cursorIndex <= event.currentTarget.value.length
+
+    if (!isValidTextarea || !hasValidCursor) return
+
+    event.preventDefault()
+    openPopup(sectionId, lineId)
+  }
 
   return (
     <div className="editor-root">
@@ -108,17 +138,24 @@ export default function SongEditor({ initialSong, onSave }: SongEditorProps) {
           value={song.title}
           onChange={(e) => updateMeta('title', e.target.value)}
         />
-
-        <SongArtistSelect
-          selectedArtistId={selectedArtistId}
-          onChangeArtist={updateArtist}
-          artists={artists}
-          isLoading={isLoadingArtists}
-          isCreating={isCreatingArtist}
-          error={artistsError}
-          createError={artistCreateError}
-          createArtist={createArtist}
-        />
+        <div className="flex gap-8 justify-start items-start">
+          <input
+            className="w-20 border border-border rounded-lg text-[0.95rem] text-(--text) transition-[border-color] duration-150 px-3.5 py-2.5 border-solid bg-(--bg2)"
+            placeholder="Tom"
+            value={defaultKey}
+            onChange={(e) => updateDefaultKey(e.target.value)}
+          />
+          <SongArtistSelect
+            selectedArtistId={selectedArtistId}
+            onChangeArtist={updateArtist}
+            artists={artists}
+            isLoading={isLoadingArtists}
+            isCreating={isCreatingArtist}
+            error={artistsError}
+            createError={artistCreateError}
+            createArtist={createArtist}
+          />
+        </div>
       </div>
 
       {/* Transposition bar */}
@@ -156,6 +193,7 @@ export default function SongEditor({ initialSong, onSave }: SongEditorProps) {
                   placeholder="Digite a letra aqui..."
                   rows={1}
                   onChange={(e) => updateLyrics(section.id, line.id, e.target.value)}
+                  onKeyDown={(e) => handleLyricsShortcut(e, section.id, line.id)}
                 />
                 <Button
                   variant="default"

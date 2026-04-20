@@ -35,7 +35,7 @@ export default function HomePage() {
           <div className="empty-state-icon">🎸</div>
           <p>Nenhuma música ainda.</p>
           <br />
-          <Link href="/admin" className="btn-primary">
+          <Link href="/song/create" className="btn-primary">
             Adicionar primeira música
           </Link>
         </div>

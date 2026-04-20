@@ -75,7 +75,7 @@ export default function SongArtistSelect({
   }
 
   return (
-    <div className="flex w-full flex-col gap-2">
+    <div className="flex w-fit flex-col gap-2">
       <label
         htmlFor="artist-select"
         className="text-sm font-medium text-(--text-muted)"
@@ -100,7 +100,7 @@ export default function SongArtistSelect({
               <ComboboxItem
                 key={itemValue}
                 value={itemValue}
-                className={itemValue === CREATE_ARTIST_VALUE ? 'border-t border-border text-accent' : undefined}
+                className={itemValue === CREATE_ARTIST_VALUE ? 'border-t border-border text-accent-foreground' : undefined}
               >
                 {getItemLabel(itemValue)}
               </ComboboxItem>

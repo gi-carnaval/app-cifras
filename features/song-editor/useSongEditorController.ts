@@ -6,6 +6,7 @@ import {
   removeChord,
   getCursorPosition,
   parseChord,
+  formatChord,
   // transposeSong,
 } from '@/core/chord-engine'
 import { createEmptySection, createEmptyLine } from '@/core/song-store'
@@ -13,6 +14,7 @@ import { Artist } from '@/domain/entities/artist'
 import { Song } from '@/domain/entities/song'
 import { moveChordIndex } from '@/application/use-cases/songs/move-chord-index'
 import useSongArtists from './useSongArtists'
+import { Chord } from '@/types'
 
 interface PopupState {
   visible: boolean
@@ -49,6 +51,7 @@ export function useSongEditorController(
   const [song, setSong] = useState<Song>(initialSong)
   // const [transpose, setTranspose] = useState(0)  // semitones relative to original
   const [popup, setPopup] = useState<PopupState>(POPUP_INITIAL)
+  const [defaultKey, setDefaultKey] = useState(formatChord(initialSong.defaultKey))
   const [popupInput, setPopupInput] = useState('')
   const [popupError, setPopupError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
@@ -164,8 +167,15 @@ export function useSongEditorController(
 
   // ─── Song meta ──────────────────────────────────────────────────────────────
 
-  function updateMeta(field: 'title' | 'artist', value: string) {
+  function updateMeta(field: 'title' | 'defaultKey', value: string | Chord) {
+    console.log({ field, value })
     setSong((s) => ({ ...s, [field]: value }))
+  }
+
+  function updateDefaultKey(value: string) {
+    setDefaultKey(value)
+    if (!value || !parseChord(value)) return
+    setSong((s) => ({ ...s, defaultKey: parseChord(value) }))
   }
 
   function updateArtist(artistId: string) {
@@ -270,6 +280,7 @@ export function useSongEditorController(
   return {
     // state
     song,
+    defaultKey,
     popup,
     popupInput,
     popupError,
@@ -286,6 +297,7 @@ export function useSongEditorController(
     // setters
     setPopupInput,
     setPopupError,
+    setDefaultKey,
 
     // actions
     openPopup,
@@ -303,5 +315,6 @@ export function useSongEditorController(
     updateSectionName,
     removeSection,
     createArtist,
+    updateDefaultKey
   }
 }
