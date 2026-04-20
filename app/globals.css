@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
 :root {
   --background: #ffffff;
@@ -8,9 +10,92 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
+
+:root {
+  --bg: #0f0e0d;
+  --bg2: #1a1917;
+  --bg3: #242220;
+  --surface: #2a2826;
+  --border: oklch(0.922 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent2: #c9a227;
+  --chord-color: #e8c547;
+  --text: #f0ede8;
+  --text-muted: #9a9590;
+  --text-dim: #5a5752;
+  --danger: #e05050;
+  --success: #50c878;
+  --radius: 0.625rem;
+  --char-font: 'Source Code Pro', monospace;
+  --display-font: 'Playfair Display', serif;
+  --body-font: 'Lato', sans-serif;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: var(--accent2);
+  --primary-foreground: var(--bg);
+  --secondary: var(--surface);
+  --secondary-foreground: var(--text);
+  --muted: var(--bg3);
+  --muted-foreground: var(--text-muted);
+  --accent-foreground: var(--bg);
+  --destructive: oklch(0.577 0.245 27.325);
+  --input: var(--border);
+  --ring: var(--accent2);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
 
 @media (prefers-color-scheme: dark) {
   :root {
@@ -23,4 +108,686 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+button {
+  cursor: pointer;
+}
+
+.navbar-logo {
+  font-family: var(--display-font);
+}
+.navbar-logo span { color: var(--text); }
+.navbar-links {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+.navbar-link {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  transition: color 0.15s;
+}
+.navbar-link:hover { color: var(--text); }
+.navbar-link.active { color: var(--accent); }
+
+/* ── Hero / Song list ───────────────────────────────────────── */
+.page-title {
+  font-family: var(--display-font);
+  font-size: 2.5rem;
+  font-weight: 900;
+  line-height: 1.1;
+  margin: 48px 0 8px;
+}
+.page-subtitle {
+  color: var(--text-muted);
+  font-size: 1rem;
+  margin-bottom: 40px;
+}
+.song-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+.song-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  transition: border-color 0.15s, transform 0.15s;
+  display: block;
+}
+.song-card:hover {
+  border-color: var(--accent2);
+  transform: translateY(-2px);
+}
+.song-card-title {
+  font-family: var(--display-font);
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.song-card-artist {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-bottom: 12px;
+}
+.song-card-meta {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+.song-card-actions {
+  margin-top: 14px;
+  display: flex;
+  gap: 8px;
+}
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+}
+.empty-state-icon { font-size: 3rem; margin-bottom: 12px; }
+
+/* ── Buttons ────────────────────────────────────────────────── */
+.btn-primary {
+  background: var(--accent);
+  color: #0f0e0d;
+  font-weight: 700;
+  font-size: 0.875rem;
+  padding: 10px 18px;
+  border-radius: var(--radius);
+  transition: background 0.15s, opacity 0.15s;
+  white-space: nowrap;
+}
+.btn-primary:hover { background: var(--accent2); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-ghost {
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  padding: 9px 16px;
+  border-radius: var(--radius);
+  transition: border-color 0.15s, color 0.15s;
+}
+.btn-ghost:hover { border-color: var(--text-muted); color: var(--text); }
+.btn-danger { color: var(--danger); border-color: transparent; }
+.btn-danger:hover { border-color: var(--danger); color: var(--danger); }
+.btn-icon { padding: 6px 10px; }
+.btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+
+/* ── Song Viewer ────────────────────────────────────────────── */
+.song-viewer {
+  --song-lyrics-font-size: 16px;
+  --song-chord-font-size: 13px;
+  --song-chord-row-height: 22px;
+  padding-top: 40px;
+}
+.song-header {
+  margin-bottom: 40px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+.song-title {
+  font-family: var(--display-font);
+  font-size: 2.2rem;
+  font-weight: 900;
+  line-height: 1.1;
+}
+.song-artist {
+  color: var(--accent);
+  font-size: 1rem;
+  margin-top: 6px;
+  font-weight: 300;
+  letter-spacing: 0.5px;
+}
+.section-block {
+  margin-bottom: 36px;
+}
+.section-name {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 16px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+.section-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* ── Cifra Line (core rendering) ────────────────────────────── */
+.cifra-line {
+  position: relative;
+  font-family: var(--char-font);
+  font-size: var(--song-lyrics-font-size, 16px);
+  line-height: 1.5;
+  margin-bottom: 2px;
+  padding-top: var(--song-chord-row-height, 22px);
+}
+.chords-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: var(--song-chord-row-height, 22px);
+  pointer-events: none;
+}
+.chord {
+  position: absolute;
+  font-family: var(--char-font);
+  font-size: var(--song-chord-font-size, 13px);
+  font-weight: 600;
+  color: var(--chord-color);
+  line-height: 1;
+  white-space: nowrap;
+}
+.lyrics {
+  font-family: var(--char-font);
+  font-size: var(--song-lyrics-font-size, 16px);
+  color: var(--text);
+  white-space: pre;
+  line-height: 1.5;
+}
+
+/* ── Editor ─────────────────────────────────────────────────── */
+.editor-root {
+  padding-top: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.editor-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.editor-input {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  font-size: 0.95rem;
+  color: var(--text);
+  width: 100%;
+  transition: border-color 0.15s;
+}
+.editor-input:focus { border-color: var(--accent); }
+.title-input {
+  font-family: var(--display-font);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+.chord-bar {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.chord-bar-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.chord-bar-label strong { color: var(--accent); }
+.chord-bar-inputs {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.chord-value-input {
+  max-width: 200px;
+  font-family: var(--char-font);
+  font-weight: 600;
+}
+.error-msg {
+  font-size: 0.8rem;
+  color: var(--danger);
+}
+.section-editor {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.section-header-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-name-input {
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--accent);
+  max-width: 200px;
+  padding: 6px 10px;
+}
+.line-editor-block {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  background: var(--bg3);
+  transition: border-color 0.15s;
+}
+.line-editor-block.active {
+  border-color: var(--accent);
+}
+.line-preview {
+  margin-bottom: 8px;
+  min-height: 42px;
+  overflow-x: auto;
+}
+.line-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+.editor-textarea {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  font-family: var(--char-font);
+  font-size: 14px;
+  resize: none;
+  color: var(--text);
+  transition: border-color 0.15s;
+  line-height: 1.5;
+}
+.editor-textarea:focus { border-color: var(--accent); }
+.chord-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.chord-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(232, 197, 71, 0.12);
+  border: 1px solid rgba(232, 197, 71, 0.3);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-family: var(--char-font);
+  font-size: 0.78rem;
+}
+.chord-tag-value { color: var(--accent); font-weight: 600; }
+.chord-tag-pos { color: var(--text-dim); }
+.chord-tag-shift {
+  min-width: 24px;
+  min-height: 24px;
+  border-radius: 4px;
+  color: var(--text-dim);
+  transition: background 0.15s, color 0.15s, transform 0.15s;
+}
+.chord-tag-shift:hover {
+  background: rgba(232, 197, 71, 0.12);
+  color: var(--text);
+}
+.chord-tag-shift:active { transform: translateY(1px); }
+.chord-tag-remove {
+  color: var(--text-dim);
+  font-size: 0.7rem;
+  transition: color 0.15s;
+  line-height: 1;
+}
+.chord-tag-remove:hover { color: var(--danger); }
+.btn-add-line {
+  align-self: flex-start;
+  font-size: 0.8rem;
+  padding: 6px 12px;
+  border-style: dashed;
+}
+.editor-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+.editor-actions-end {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.btn-save { min-width: 140px; text-align: center; }
+.pdf-upload-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.pdf-upload-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pdf-upload-file,
+.pdf-upload-selected {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+/* ── Back link ──────────────────────────────────────────────── */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0;
+  transition: color 0.15s;
+}
+.back-link:hover { color: var(--text); }
+
+/* ── Song page toolbar ──────────────────────────────────────── */
+.song-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 28px;
+}
+.song-view-mode-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 20px;
+}
+.song-view-mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg2);
+  padding: 4px;
+}
+.song-pdf-unavailable {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+}
+.song-pdf-viewer {
+  margin-top: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg2);
+  overflow: hidden;
+}
+.song-pdf-viewer.fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+}
+.song-pdf-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--border);
+  padding: 10px 12px;
+}
+.song-pdf-title {
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.song-pdf-frame {
+  display: block;
+  width: 100%;
+  height: min(76vh, 860px);
+  border: 0;
+  background: #fff;
+}
+.song-pdf-viewer.fullscreen .song-pdf-frame {
+  flex: 1;
+  height: auto;
+}
+.song-pdf-empty {
+  display: flex;
+  min-height: 340px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 16px;
+  color: var(--text-muted);
+  padding: 48px 20px;
+  text-align: center;
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ══ V2 ADDITIONS ══════════════════════════════════════════════ */
+
+/* ── Cifra Line V2 (responsive chunk rendering) ─────────────── */
+.cifra-line-v2 {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  width: 100%;
+}
+
+.cifra-char-measure {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
+  white-space: pre;
+  font-family: var(--char-font);
+  font-size: var(--song-lyrics-font-size, 16px);
+  line-height: 1;
+}
+
+.cifra-chunk {
+  position: relative;
+  padding-top: var(--song-chord-row-height, 22px);
+  margin-bottom: 2px;
+}
+
+/* ── Transpose Bar ──────────────────────────────────────────── */
+.transpose-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 16px;
+}
+.transpose-label {
+  font-size: 0.78rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.transpose-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.transpose-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: var(--char-font);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 4px;
+  transition: background 0.12s, border-color 0.12s;
+  cursor: pointer;
+}
+.transpose-btn:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #0f0e0d;
+}
+.transpose-value {
+  min-width: 72px;
+  text-align: center;
+  font-family: var(--char-font);
+  font-size: 0.85rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+.transpose-reset {
+  font-size: 1rem;
+  color: var(--text-muted);
+  padding: 2px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: color 0.12s;
+  background: none;
+  border: none;
+}
+.transpose-reset:hover { color: var(--text); }
+
+/* ── Chord Popup ─────────────────────────────────────────────── */
+.popup-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99;
+}
+.chord-popup {
+  position: absolute;
+  z-index: 100;
+  background: var(--bg2);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  min-width: 260px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  animation: popupIn 0.12s ease;
+}
+@keyframes popupIn {
+  from { opacity: 0; transform: translateY(6px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.popup-label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+.popup-label strong { color: var(--accent); }
+.popup-close {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 2px 5px;
+  border-radius: 3px;
+  background: none;
+  border: none;
+  transition: color 0.1s;
+}
+.popup-close:hover { color: var(--text); }
+.popup-body {
+  display: flex;
+  gap: 8px;
+}
+.popup-input {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 8px 10px;
+  font-family: var(--char-font);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.5px;
+  transition: border-color 0.12s;
+}
+.popup-input:focus { border-color: var(--accent); outline: none; }
+.popup-confirm {
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+.popup-error {
+  font-size: 0.78rem;
+  color: var(--danger);
+  margin-top: 6px;
+}
+.popup-hint {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  margin-top: 8px;
+  font-family: var(--char-font);
+}
+
+/* ── Add chord button inline ──────────────────────────────────── */
+.add-chord-btn {
+  white-space: nowrap;
+  font-size: 0.8rem;
+  padding: 8px 12px;
+}
+
+/* ── Song page transposition display ─────────────────────────── */
+.song-transpose-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 24px;
+}
+
+.song-reading-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 24px;
+}
+
+.song-reading-toolbar .song-transpose-bar {
+  padding: 0;
+  border-bottom: 0;
+  margin-bottom: 0;
+}
+
+.song-font-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.song-font-value {
+  min-width: 44px;
+  text-align: center;
+  color: var(--accent);
+  font-family: var(--char-font);
+  font-size: 0.85rem;
+  font-weight: 600;
 }
