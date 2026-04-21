@@ -94,7 +94,7 @@ export default function EditSongPage() {
         </span>
       </div>
 
-      <SongEditor initialSong={song} onSave={handleSave} />
+      <SongEditor key={song.id} initialSong={song} onSave={handleSave} />
     </main>
   )
 }

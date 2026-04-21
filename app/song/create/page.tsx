@@ -55,7 +55,7 @@ export default function CreateSongPage() {
           Nova música
         </span>
       </div>
-      <SongEditor initialSong={song} onSave={handleCreate} />
+      <SongEditor key={song.id} initialSong={song} onSave={handleCreate} />
     </main>
   )
 }
