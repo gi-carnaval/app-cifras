@@ -5,6 +5,9 @@ import { cn } from "@/lib/utils";
 import Link from 'next/link';
 import { ThemeProvider } from '@/components/theme/theme-provider';
 import ThemeToggle from '@/components/theme/theme-toggle';
+import { AuthSessionProvider } from '@/features/auth/auth-session-provider';
+import { AuthNav } from '@/features/auth/components/auth-nav';
+import { CreateSongNavLink } from '@/features/auth/components/create-song-nav-link';
 
 const montserrat = Montserrat({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -45,21 +48,22 @@ export default function RootLayout({
       </head>
       <body className="bg-(--bg) text-(--text)">
         <ThemeProvider>
-          <nav className="border-b border-border bg-(--bg)">
-            <div className="flex items-center justify-between max-w-215 mx-auto my-0 px-6 py-5">
-              <Link href="/" className="text-2xl font-black text-accent tracking-[-0.5px]">
-                Cifras<span>App</span>
-              </Link>
-              <div className="navbar-links">
-                <Link href="/" className="navbar-link">Músicas</Link>
-                <Link href="/song/create" className="navbar-link">
-                  <span className="btn-primary btn-sm">+ Nova Música</span>
+          <AuthSessionProvider>
+            <nav className="border-b border-border bg-(--bg)">
+              <div className="flex items-center justify-between max-w-215 mx-auto my-0 px-6 py-5">
+                <Link href="/" className="text-2xl font-black text-accent tracking-[-0.5px]">
+                  Cifras<span>App</span>
                 </Link>
-                <ThemeToggle />
+                <div className="navbar-links">
+                  <Link href="/" className="navbar-link">Músicas</Link>
+                  <CreateSongNavLink />
+                  <AuthNav />
+                  <ThemeToggle />
+                </div>
               </div>
-            </div>
-          </nav>
-          {children}
+            </nav>
+            {children}
+          </AuthSessionProvider>
         </ThemeProvider>
       </body>
     </html>

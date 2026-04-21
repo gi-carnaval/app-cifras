@@ -1,4 +1,5 @@
 import { getAllSongsUseCase } from '@/application/use-cases/songs/get-all-songs'
+import { SongsMobileList } from '@/features/songs/components/songs-mobile-list'
 import { SongsTable } from '@/features/songs/components/songs-table'
 import { toSongRows } from '@/features/songs/mappers/song-row.mapper'
 import { createPocketbaseSongRepository } from '@/infrastructure/pocketbase/pocketbase.repository'
@@ -17,7 +18,12 @@ export default async function HomePage() {
         <p className="text-base text-(--text-muted)">Sua coleção de músicas com acordes</p>
       </div>
 
-      <SongsTable songs={songRows} />
+      <div className="md:hidden">
+        <SongsMobileList songs={songRows} />
+      </div>
+      <div className="hidden md:block">
+        <SongsTable songs={songRows} />
+      </div>
     </main>
   )
 }

@@ -432,7 +432,7 @@ button {
 /* ── Song Viewer ────────────────────────────────────────────── */
 .song-viewer {
   --song-lyrics-font-size: 16px;
-  --song-chord-font-size: 13px;
+  --song-chord-font-size: 16px;
   --song-chord-row-height: 22px;
   padding-top: 40px;
 }
@@ -493,7 +493,7 @@ button {
 .chord {
   position: absolute;
   font-family: var(--char-font);
-  font-size: var(--song-chord-font-size, 13px);
+  font-size: var(--song-chord-font-size, 16px);
   font-weight: 700;
   color: var(--chord-color);
   line-height: 1;
