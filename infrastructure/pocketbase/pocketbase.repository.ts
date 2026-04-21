@@ -19,7 +19,7 @@ export function createPocketbaseSongRepository(): PocketbaseSongRepository {
 
   async function getAll(): Promise<Song[]> {
     const result = await pb.collection(collection).getFullList<PocketbaseSongDTO>({
-      expand: "artist,categories,liturgical_moments",
+      expand: "artist, categories, liturgical_moments",
     });
     return result.map(toSongEntity);
   }
