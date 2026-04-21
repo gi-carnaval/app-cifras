@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { transposeSong } from '@/core/chord-engine'
 import { Song } from '@/domain/entities/song'
+import { useAuthSession } from '@/features/auth/auth-session-provider'
 import SongViewer from './SongViewer'
 
 type ViewMode = 'chord' | 'pdf'
@@ -23,6 +24,7 @@ function getPdfUrl(song: Song) {
 }
 
 export default function SongPageClient({ initialSong }: SongPageClientProps) {
+  const { isAuthenticated } = useAuthSession()
   const [song, setSong] = useState(initialSong)
   const [steps, setSteps] = useState(0)
   const [mode, setMode] = useState<ViewMode>('chord')
@@ -31,7 +33,7 @@ export default function SongPageClient({ initialSong }: SongPageClientProps) {
   const pdfUrl = getPdfUrl(song)
   const visualConfig = {
     lyricFontSize: songFontSize,
-    chordFontSize: Math.round(songFontSize * 0.8125),
+    chordFontSize: Math.round(songFontSize),
   }
   const mobileToolButtonClass =
     'h-11 flex-1 flex-col gap-0 border-[var(--border)] bg-[var(--surface)] px-2 text-xs text-[var(--text)] hover:bg-[var(--accent)] hover:text-[var(--bg)]'
@@ -66,7 +68,9 @@ export default function SongPageClient({ initialSong }: SongPageClientProps) {
     <main className="max-w-215 mx-auto my-0 pt-0 pb-28 sm:pb-20 px-6">
       <div className="song-toolbar">
         <Link href="/" className="back-link">← Todas as músicas</Link>
-        <Link href={`/song/${song.id}/edit`} className="btn-ghost btn-sm">Editar cifra</Link>
+        {isAuthenticated && (
+          <Link href={`/song/${song.id}/edit`} className="btn-ghost btn-sm">Editar cifra</Link>
+        )}
       </div>
 
       <div className="song-view-mode-bar">
@@ -236,9 +240,11 @@ export default function SongPageClient({ initialSong }: SongPageClientProps) {
           ) : (
             <div className="song-pdf-empty">
               <p>Nenhum PDF disponível para esta música</p>
-              <Button type="button" asChild>
-                <Link href={`/song/${song.id}/edit`}>Adicionar PDF</Link>
-              </Button>
+              {isAuthenticated && (
+                <Button type="button" asChild>
+                  <Link href={`/song/${song.id}/edit`}>Adicionar PDF</Link>
+                </Button>
+              )}
             </div>
           )}
         </div>
