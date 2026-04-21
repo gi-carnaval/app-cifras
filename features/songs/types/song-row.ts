@@ -3,5 +3,6 @@ export type SongRow = {
   title: string
   artistName: string
   defaultKey: string
+  categories: string[]
   categoriesLabel: string
 }

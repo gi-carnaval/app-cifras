@@ -5,8 +5,8 @@ import Link from 'next/link'
 
 import { DataTableColumnHeader } from '@/components/data-table/data-table-column-header'
 import { DataTableRowActions } from '@/components/data-table/data-table-row-actions'
-import { Button } from '@/components/ui/button'
 import type { SongRow } from '../types/song-row'
+import { SongRowActions } from './song-row-actions'
 
 export const songsColumns: ColumnDef<SongRow>[] = [
   {
@@ -55,12 +55,10 @@ export const songsColumns: ColumnDef<SongRow>[] = [
     enableHiding: false,
     cell: ({ row }) => (
       <DataTableRowActions>
-        <Button type="button" variant="ghost" size="sm" asChild>
-          <Link href={`/song/${row.original.id}`}>Ver</Link>
-        </Button>
-        <Button type="button" variant="ghost" size="sm" asChild>
-          <Link href={`/song/${row.original.id}/edit`}>Editar</Link>
-        </Button>
+        <SongRowActions
+          songId={row.original.id}
+          songTitle={row.original.title}
+        />
       </DataTableRowActions>
     ),
   },
