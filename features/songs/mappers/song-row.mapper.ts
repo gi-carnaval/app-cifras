@@ -3,10 +3,7 @@ import type { Song } from '@/domain/entities/song'
 import type { SongRow } from '../types/song-row'
 
 export function toSongRow(song: Song): SongRow {
-  console.log({ categoires: song.categories.map((category) => category.name) })
   const categories = song.categories.map((category) => category.name)
-
-  console.log({ categories })
 
   return {
     id: song.id,
