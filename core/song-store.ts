@@ -11,6 +11,7 @@ export function createEmptySong(): Song {
       slug: '',
     },
     categories: [],
+    liturgicalMoments: [],
     defaultKey: { root: 'C' },
     cifraPDF: '',
     sections: [
