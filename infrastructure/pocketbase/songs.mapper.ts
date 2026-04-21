@@ -1,10 +1,12 @@
 import { parseChord, formatChord } from "@/core/chord-engine"
 import { Artist } from "@/domain/entities/artist"
 import { Category } from "@/domain/entities/category"
-import { Section, Song } from "@/domain/entities/song"
+import type { Section, Song } from "@/domain/entities/song"
 import { PocketbaseSongDTO } from "../api/dto/pocketbase-song-dto"
 import { toArtistEntity } from "./artists.mapper"
 import { toCategoryEntity } from "./categories.mapper"
+import { LiturgicalMoment } from "@/domain/entities/liturgicalMoment"
+import { toLiturgicalMomentEntity } from "./liturgicalMoment.mapper"
 
 interface PocketbaseSongSaveOptions {
   cifraPdfFile?: File | null
@@ -39,6 +41,19 @@ function toCategories(dto: PocketbaseSongDTO): Category[] {
   }))
 }
 
+function toLiturgicalMoments(dto: PocketbaseSongDTO): LiturgicalMoment[] {
+  if (dto.expand?.liturgical_moments) {
+    return dto.expand.liturgical_moments.map(toLiturgicalMomentEntity)
+  }
+
+  return (dto.liturgical_moments ?? []).map((liturgicalMomentId) => ({
+    id: liturgicalMomentId,
+    name: "",
+    slug: "",
+    order: 0
+  }))
+}
+
 export function toSongEntity(dto: PocketbaseSongDTO): Song {
   return {
     id: dto.id,
@@ -46,6 +61,7 @@ export function toSongEntity(dto: PocketbaseSongDTO): Song {
     artist: toArtist(dto),
     defaultKey: parseChord(dto.default_key) || "",
     categories: toCategories(dto),
+    liturgicalMoments: toLiturgicalMoments(dto),
     sections: toSections(dto.sections),
     cifraPDF: dto.cifra_pdf?.[0] ?? "",
   }
@@ -57,6 +73,7 @@ export function toPocketbaseSongDTO(song: Song): PocketbaseSongDTO {
     title: song.title,
     artist: song.artist.id,
     categories: song.categories.map((category) => category.id),
+    liturgical_moments: song.liturgicalMoments.map(moment => moment.id),
     cifra_pdf: song.cifraPDF ? [song.cifraPDF] : [],
     default_key: formatChord(song.defaultKey),
     sections: song.sections as unknown as JSON,
@@ -70,6 +87,13 @@ export function toPocketbaseSongFormData(song: Song, options?: PocketbaseSongSav
   formData.set("artist", song.artist.id)
   formData.set("default_key", formatChord(song.defaultKey))
   formData.set("sections", JSON.stringify(song.sections))
+  if (song.liturgicalMoments.length > 0) {
+    song.liturgicalMoments.forEach((liturgicalMoment) => {
+      formData.append("liturgical_moments", liturgicalMoment.id)
+    })
+  } else {
+    formData.set("liturgical_moments", "")
+  }
 
   song.categories.forEach((category) => {
     formData.append("categories", category.id)

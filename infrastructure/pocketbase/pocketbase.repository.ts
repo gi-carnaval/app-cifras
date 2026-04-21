@@ -19,7 +19,7 @@ export function createPocketbaseSongRepository(): PocketbaseSongRepository {
 
   async function getAll(): Promise<Song[]> {
     const result = await pb.collection(collection).getFullList<PocketbaseSongDTO>({
-      expand: "artist,categories",
+      expand: "artist,categories,liturgical_moments",
     });
     return result.map(toSongEntity);
   }
@@ -27,7 +27,7 @@ export function createPocketbaseSongRepository(): PocketbaseSongRepository {
   async function getById(id: string): Promise<Song | null> {
     try {
       const record = await pb.collection(collection).getOne<PocketbaseSongDTO>(id, {
-        expand: "artist,categories",
+        expand: "artist,categories,liturgical_moments",
       });
       return toSongEntity(record);
     } catch {

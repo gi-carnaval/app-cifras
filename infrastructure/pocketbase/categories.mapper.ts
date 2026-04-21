@@ -8,3 +8,11 @@ export function toCategoryEntity(dto: PocketbaseCategoryDTO): Category {
     slug: dto.slug,
   }
 }
+
+export function toPocketbaseCategoryDTO(category: Category): PocketbaseCategoryDTO {
+  return {
+    id: category.id,
+    name: category.name,
+    slug: category.slug,
+  }
+}
