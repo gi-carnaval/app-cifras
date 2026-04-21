@@ -227,8 +227,8 @@ export default function SongPageClient({ initialSong }: SongPageClientProps) {
               />
               <div className="flex min-h-80 flex-col items-center justify-center gap-4 px-5 py-12 text-center sm:hidden">
                 <div>
-                  <p className="text-sm font-semibold text-[var(--text)]">{song.title || 'PDF da cifra'}</p>
-                  <p className="mt-1 text-xs text-[var(--text-muted)]">Visualização móvel</p>
+                  <p className="text-sm font-semibold text-(--text)">{song.title || 'PDF da cifra'}</p>
+                  <p className="mt-1 text-xs text-(--text-muted)">Visualização móvel</p>
                 </div>
                 <Button type="button" asChild>
                   <a href={pdfUrl} target="_blank" rel="noopener noreferrer">
