@@ -32,7 +32,7 @@ export default function QuickCreateArtist({
   }
 
   return (
-    <div className="flex w-full flex-col gap-3 rounded-(--radius) border border-(--border) bg-(--bg2) p-4">
+    <div className="flex w-full flex-col gap-3 rounded-lg border border-border bg-(--bg2) p-4">
       <div className="flex flex-col gap-1">
         <label
           htmlFor="artist-name"
@@ -48,7 +48,7 @@ export default function QuickCreateArtist({
           value={name}
           onChange={(e) => setName(e.target.value)}
           disabled={loading}
-          className="w-full rounded-(--radius) border border-(--border) bg-(--surface) px-3! py-2.5 text-sm text-(--text) placeholder:text-(--text-dim) outline-none transition focus:border-(--accent) focus:ring-2 focus:ring-(--accent)/20 disabled:cursor-not-allowed disabled:opacity-60"
+          className="w-full rounded-lg border border-border bg-(--surface) px-3! py-2.5 text-sm text-(--text) placeholder:text-(--text-dim) outline-none transition focus:border-accent focus:ring-2 focus:ring-(--accent)/20 disabled:cursor-not-allowed disabled:opacity-60"
         />
       </div>
 

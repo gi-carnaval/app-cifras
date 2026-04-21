@@ -204,7 +204,7 @@ export default function SongPageClient({ initialSong }: SongPageClientProps) {
         <div className={isPdfFullscreen ? 'song-pdf-viewer fullscreen' : 'song-pdf-viewer'}>
           {pdfUrl ? (
             <>
-              <div className="song-pdf-toolbar">
+              <div className="song-pdf-toolbar hidden sm:flex">
                 <span className="song-pdf-title">{song.title || 'PDF da cifra'}</span>
                 {isPdfFullscreen ? (
                   <Button type="button" variant="outline" size="sm" onClick={() => setIsPdfFullscreen(false)}>
@@ -212,15 +212,26 @@ export default function SongPageClient({ initialSong }: SongPageClientProps) {
                   </Button>
                 ) : (
                   <Button type="button" variant="outline" size="sm" onClick={() => setIsPdfFullscreen(true)}>
-                    Fullscreen
+                    Abrir em tela cheia
                   </Button>
                 )}
               </div>
               <iframe
-                className="song-pdf-frame"
+                className="song-pdf-frame hidden sm:block"
                 src={pdfUrl}
                 title={`PDF - ${song.title}`}
               />
+              <div className="flex min-h-80 flex-col items-center justify-center gap-4 px-5 py-12 text-center sm:hidden">
+                <div>
+                  <p className="text-sm font-semibold text-[var(--text)]">{song.title || 'PDF da cifra'}</p>
+                  <p className="mt-1 text-xs text-[var(--text-muted)]">Visualização móvel</p>
+                </div>
+                <Button type="button" asChild>
+                  <a href={pdfUrl} target="_blank" rel="noopener noreferrer">
+                    Abrir PDF
+                  </a>
+                </Button>
+              </div>
             </>
           ) : (
             <div className="song-pdf-empty">

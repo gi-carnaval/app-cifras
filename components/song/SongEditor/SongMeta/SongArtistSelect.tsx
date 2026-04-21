@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { Artist } from '@/domain/entities/artist'
+import type { Artist } from '@/domain/entities/artist'
 import { Combobox, ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxItem, ComboboxList, ComboboxTrigger, ComboboxValue } from '@/components/ui/combobox'
 import { Button } from '@/components/ui/button'
 
@@ -75,7 +75,7 @@ export default function SongArtistSelect({
   }
 
   return (
-    <div className="flex w-fit flex-col gap-2">
+    <div className="flex w-full flex-col gap-2">
       <label
         htmlFor="artist-select"
         className="text-sm font-medium text-(--text-muted)"
@@ -91,7 +91,7 @@ export default function SongArtistSelect({
         onInputValueChange={setInputValue}
         onValueChange={handleValueChange}
       >
-        <ComboboxTrigger render={<Button variant="outline" className="w-64 justify-between font-normal"><ComboboxValue /></Button>} />
+        <ComboboxTrigger render={<Button variant="outline" className="w-full justify-between font-normal"><ComboboxValue /></Button>} />
         <ComboboxContent>
           <ComboboxInput showTrigger={false} placeholder="Buscar artista" disabled={isLoading || isCreating} />
           <ComboboxEmpty>{isLoading ? 'Carregando artistas...' : error ?? 'Nenhum artista encontrado'}</ComboboxEmpty>
