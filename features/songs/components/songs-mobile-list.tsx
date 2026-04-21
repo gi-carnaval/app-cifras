@@ -54,7 +54,7 @@ export function SongsMobileList({ songs }: SongsMobileListProps) {
               </div>
 
               <div className="mt-3 flex flex-wrap items-center gap-2">
-                <span className="inline-flex min-h-7 items-center rounded-md border border-border bg-(--bg) px-2.5 text-xs font-semibold text-(--accent)">
+                <span className="inline-flex min-h-7 items-center rounded-md border border-border bg-(--bg) px-2.5 text-xs font-semibold text-accent">
                   Tom {song.defaultKey || '-'}
                 </span>
                 {visibleCategories.length > 0 ? (

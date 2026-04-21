@@ -119,7 +119,7 @@ export function LoginForm() {
 
       <p className="text-sm text-(--text-muted)">
         Ainda não tem conta?{' '}
-        <Link href="/register" className="font-medium text-(--accent) hover:text-(--accent2)">
+        <Link href="/register" className="font-medium text-accent hover:text-(--accent2)">
           Cadastre-se
         </Link>
       </p>
