@@ -10,11 +10,16 @@ import {
   // transposeSong,
 } from '@/core/chord-engine'
 import { createEmptySection, createEmptyLine } from '@/core/song-store'
-import { Artist } from '@/domain/entities/artist'
-import { Song } from '@/domain/entities/song'
+import { getArtistById, type Section, type Song } from '@/domain/entities/song'
 import { moveChordIndex } from '@/application/use-cases/songs/move-chord-index'
 import useSongArtists from './useSongArtists'
-import { Chord } from '@/types'
+import useSongCategories from './useSongCategories'
+import useSongLiturgicalMoments from './useSongLiturgicalMoments'
+import { getLiturgicalMomentIds, hasMissaCategory } from '@/domain/entities/liturgicalMoment'
+import { buildLiturgicalMomentOptions, normalizeLiturgicalMomentsWithOptions } from '@/application/use-cases/songs/normalize-liturgical-moments'
+import { updateSongCategories } from '@/application/use-cases/songs/update-song-categories'
+import { updateSongLiturgicalMoments } from '@/application/use-cases/songs/update-song-liturgical-moments'
+import { buildSongToSave } from '@/application/use-cases/songs/build-song-to-save'
 
 interface PopupState {
   visible: boolean
@@ -34,10 +39,23 @@ const POPUP_INITIAL: PopupState = {
   left: 0,
 }
 
-function getArtistById(artists: Artist[], artistId: string | null) {
-  if (!artistId) return null
+function reorderSections(sections: Section[], sectionId: string, direction: -1 | 1) {
+  const currentIndex = sections.findIndex((section) => section.id === sectionId)
+  const targetIndex = currentIndex + direction
 
-  return artists.find((artist) => artist.id === artistId) ?? null
+  if (
+    currentIndex < 0 ||
+    targetIndex < 0 ||
+    targetIndex >= sections.length
+  ) {
+    return sections
+  }
+
+  return sections.map((section, index) => {
+    if (index === currentIndex) return sections[targetIndex]
+    if (index === targetIndex) return sections[currentIndex]
+    return section
+  })
 }
 
 interface SongEditorSaveOptions {
@@ -49,15 +67,21 @@ export function useSongEditorController(
   onSave: (song: Song, options?: SongEditorSaveOptions) => void | Promise<void>
 ) {
   const [song, setSong] = useState<Song>(initialSong)
-  // const [transpose, setTranspose] = useState(0)  // semitones relative to original
   const [popup, setPopup] = useState<PopupState>(POPUP_INITIAL)
   const [defaultKey, setDefaultKey] = useState(formatChord(initialSong.defaultKey))
   const [popupInput, setPopupInput] = useState('')
   const [popupError, setPopupError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
+  const [selectedArtistId, setSelectedArtistId] = useState<string | null>(initialSong.artist?.id ?? null)
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>(
+    initialSong.categories.map((category) => category.id)
+  )
+  const [liturgicalMomentsFieldError, setLiturgicalMomentsFieldError] = useState<string | null>(null)
+
   const popupInputRef = useRef<HTMLInputElement>(null)
   const textareaRefs = useRef<Record<string, HTMLTextAreaElement | null>>({})
-  const [selectedArtistId, setSelectedArtistId] = useState<string | null>(initialSong.artist?.id ?? null)
+
+
   const {
     artists,
     isLoading: isLoadingArtists,
@@ -66,6 +90,24 @@ export function useSongEditorController(
     createError: artistCreateError,
     createArtist,
   } = useSongArtists()
+
+  const {
+    categories,
+    isLoading: isLoadingCategories,
+    isCreating: isCreatingCategory,
+    error: categoriesError,
+    createError: categoryCreateError,
+    createCategory: createCategoryFromSource,
+  } = useSongCategories()
+
+  const {
+    liturgicalMoments,
+    isLoading: isLoadingLiturgicalMoments,
+    isCreating: isCreatingLiturgicalMoment,
+    error: liturgicalMomentsError,
+    createError: liturgicalMomentCreateError,
+    createLiturgicalMoment: createLiturgicalMomentFromSource,
+  } = useSongLiturgicalMoments()
 
   // Close popup on Escape
   useEffect(() => {
@@ -128,7 +170,6 @@ export function useSongEditorController(
       setPopupError(`Acorde inválido: ${message}`)
       return
     }
-
     setSong((s) => {
       const newSections = s.sections.map((sec) => {
         if (sec.id !== popup.sectionId) return sec
@@ -167,8 +208,7 @@ export function useSongEditorController(
 
   // ─── Song meta ──────────────────────────────────────────────────────────────
 
-  function updateMeta(field: 'title' | 'defaultKey', value: string | Chord) {
-    console.log({ field, value })
+  function updateMeta(field: 'title', value: string) {
     setSong((s) => ({ ...s, [field]: value }))
   }
 
@@ -183,8 +223,52 @@ export function useSongEditorController(
 
     const selectedArtist = getArtistById(artists, artistId)
     if (!selectedArtist) return
-
     setSong((s) => ({ ...s, artist: selectedArtist }))
+  }
+
+  function updateCategories(categoryIds: string[]) {
+    const categoryPool = [...categories, ...song.categories]
+
+    const result = updateSongCategories({
+      song,
+      categoryIds,
+      availableCategories: categoryPool,
+    })
+
+    setSelectedCategoryIds(result.selectedCategoryIds)
+    // setLiturgicalMomentsFieldError(result.fieldError)
+    setSong(result.nextSong)
+  }
+
+  async function createCategory(name: string) {
+    const createdCategory = await createCategoryFromSource(name)
+    if (!createdCategory) return null
+
+    setSelectedCategoryIds((currentIds) => {
+      if (currentIds.includes(createdCategory.id)) return currentIds
+      return [...currentIds, createdCategory.id]
+    })
+
+    setSong((s) => {
+      const categoryExists = s.categories.some((category) => category.id === createdCategory.id)
+      if (categoryExists) return s
+
+      return { ...s, categories: [...s.categories, createdCategory] }
+    })
+
+    return createdCategory
+  }
+
+  function updateLiturgicalMoments(liturgicalMomentIds: string[]) {
+    const liturgicalMomentPool = [...liturgicalMoments, ...song.liturgicalMoments]
+
+    const result = updateSongLiturgicalMoments({
+      song,
+      liturgicalMomentIds,
+      availableLiturgicalMoments: liturgicalMomentPool,
+    })
+    setLiturgicalMomentsFieldError(result.fieldError)
+    setSong(result.nextSong)
   }
 
   // ─── Section management ─────────────────────────────────────────────────────
@@ -202,6 +286,14 @@ export function useSongEditorController(
 
   function removeSection(sectionId: string) {
     setSong((s) => ({ ...s, sections: s.sections.filter((sec) => sec.id !== sectionId) }))
+  }
+
+  function moveSectionUp(sectionId: string) {
+    setSong((s) => ({ ...s, sections: reorderSections(s.sections, sectionId, -1) }))
+  }
+
+  function moveSectionDown(sectionId: string) {
+    setSong((s) => ({ ...s, sections: reorderSections(s.sections, sectionId, 1) }))
   }
 
   // ─── Line management ────────────────────────────────────────────────────────
@@ -268,14 +360,35 @@ export function useSongEditorController(
   // ─── Save ───────────────────────────────────────────────────────────────────
 
   async function handleSave(options?: SongEditorSaveOptions) {
-    const selectedArtist = getArtistById(artists, selectedArtistId)
-    const songToSave = selectedArtist ? { ...song, artist: selectedArtist } : song
+    const result = buildSongToSave({
+      song,
+      artists,
+      categories,
+      liturgicalMoments,
+      selectedArtistId,
+      selectedCategoryIds,
+    })
 
-    setSong(songToSave)
-    await onSave(songToSave, options)
+    setLiturgicalMomentsFieldError(result.fieldError)
+
+    if (!result.songToSave) return
+
+    setSong(result.songToSave)
+    await onSave(result.songToSave, options)
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }
+
+  const syncedLiturgicalMoments = normalizeLiturgicalMomentsWithOptions(
+    song.liturgicalMoments,
+    liturgicalMoments
+  )
+
+  const selectedLiturgicalMomentsIds = getLiturgicalMomentIds(syncedLiturgicalMoments)
+  const liturgicalMomentOptions = buildLiturgicalMomentOptions(
+    liturgicalMoments,
+    syncedLiturgicalMoments
+  )
 
   return {
     // state
@@ -290,7 +403,15 @@ export function useSongEditorController(
     isCreatingArtist,
     artistsError,
     artistCreateError,
+    categories,
+    isLoadingCategories,
+    isCreatingCategory,
+    categoriesError,
+    categoryCreateError,
     selectedArtistId,
+    selectedCategoryIds,
+    selectedLiturgicalMomentsIds,
+    shouldShowLiturgicalMoments: hasMissaCategory(song.categories),
     textareaRefs,
     popupInputRef,
 
@@ -299,12 +420,22 @@ export function useSongEditorController(
     setPopupError,
     setDefaultKey,
 
+    liturgicalMoments,
+    liturgicalMomentOptions,
+    isLoadingLiturgicalMoments,
+    isCreatingLiturgicalMoment,
+    liturgicalMomentsError: liturgicalMomentsFieldError ?? liturgicalMomentsError,
+    liturgicalMomentCreateError,
+    createLiturgicalMomentFromSource,
+
     // actions
     openPopup,
     closePopup,
     commitPopup,
     updateMeta,
     updateArtist,
+    updateCategories,
+    updateLiturgicalMoments,
     addSection,
     addLine,
     removeLine,
@@ -314,7 +445,10 @@ export function useSongEditorController(
     handleMoveChord,
     updateSectionName,
     removeSection,
+    moveSectionUp,
+    moveSectionDown,
     createArtist,
+    createCategory,
     updateDefaultKey
   }
 }
