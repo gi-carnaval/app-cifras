@@ -22,8 +22,14 @@ async function parseSongSaveRequest(request: Request): Promise<{ song: Song; opt
   }
 }
 
-export async function GET() {
-  const repo = createPocketbaseSongRepository()
+function getRepositoryOptions(request: Request) {
+  return {
+    serializedSession: request.headers.get('cookie') || '',
+  }
+}
+
+export async function GET(request: Request) {
+  const repo = createPocketbaseSongRepository(getRepositoryOptions(request))
   const getAllSongs = getAllSongsUseCase(repo)
 
   const songs = await getAllSongs()
@@ -46,7 +52,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const repo = createPocketbaseSongRepository()
+  const repo = createPocketbaseSongRepository(getRepositoryOptions(request))
   const saveSong = saveSongUseCase(repo)
   const { song, options } = await parseSongSaveRequest(request)
 

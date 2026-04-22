@@ -1,10 +1,15 @@
-import { createCategoryUseCase } from "@/application/use-cases/categories/create-category"
 import { createLiturgicalMomentUseCase } from "@/application/use-cases/liturgicalMoments/create-liturgical-moment"
 import { getAllLiturgicalMomentsUseCase } from "@/application/use-cases/liturgicalMoments/get-all-liturgical-moments"
 import { createPocketbaseLiturgicalMomentRepository } from "@/infrastructure/pocketbase/pocketbase-liturgical-moment.repository"
 
-export async function GET() {
-  const repo = createPocketbaseLiturgicalMomentRepository()
+function getRepositoryOptions(request: Request) {
+  return {
+    serializedSession: request.headers.get("cookie") || "",
+  }
+}
+
+export async function GET(request: Request) {
+  const repo = createPocketbaseLiturgicalMomentRepository(getRepositoryOptions(request))
   const getAllLiturgicalMoments = getAllLiturgicalMomentsUseCase(repo)
 
   const liturgicalMoments = await getAllLiturgicalMoments()
@@ -20,7 +25,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const repo = createPocketbaseLiturgicalMomentRepository()
+  const repo = createPocketbaseLiturgicalMomentRepository(getRepositoryOptions(request))
   const createLiturgicalMoment = createLiturgicalMomentUseCase(repo)
   const body = await request.json()
 

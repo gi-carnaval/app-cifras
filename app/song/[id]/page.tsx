@@ -1,7 +1,9 @@
 import Link from 'next/link'
 import { getSongByIdUseCase } from '@/application/use-cases/songs/get-song-by-id'
+import { requireAuthenticatedUser } from '@/app/auth/require-authenticated-user'
 import SongPageClient from '@/components/song/SongPageClient'
 import { createPocketbaseSongRepository } from '@/infrastructure/pocketbase/pocketbase.repository'
+import { cookies } from 'next/headers'
 
 interface SongPageProps {
   params: Promise<{ id: string }>
@@ -9,7 +11,11 @@ interface SongPageProps {
 
 export default async function SongPage({ params }: SongPageProps) {
   const { id } = await params
-  const repo = createPocketbaseSongRepository()
+  await requireAuthenticatedUser(`/song/${id}`)
+  const cookieStore = await cookies()
+  const repo = createPocketbaseSongRepository({
+    serializedSession: cookieStore.toString(),
+  })
   const getSongById = getSongByIdUseCase(repo)
   const song = await getSongById(id)
 

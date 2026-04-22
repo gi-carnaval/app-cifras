@@ -24,6 +24,15 @@ export async function POST(request: Request) {
     const repo = createPocketbaseAuthRepository()
     const loginUser = createLoginUserUseCase(repo)
     const result = await loginUser(body)
+
+    if (result.status === 'unverified') {
+      const response = new Response(result.message, { status: 403 })
+
+      response.headers.append('Set-Cookie', repo.exportSessionCookie())
+
+      return response
+    }
+
     const response = Response.json(result)
 
     response.headers.append('Set-Cookie', repo.exportSessionCookie())

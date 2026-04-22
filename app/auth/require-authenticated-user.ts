@@ -9,7 +9,7 @@ export async function requireAuthenticatedUser(redirectTo: string) {
   const getCurrentSession = createGetCurrentSessionUseCase(repo)
   const session = await getCurrentSession(cookieStore.toString())
 
-  if (!session.isAuthenticated) {
+  if (!session.isAuthenticated || !session.user) {
     redirect(`/login?redirectTo=${encodeURIComponent(redirectTo)}`)
   }
 

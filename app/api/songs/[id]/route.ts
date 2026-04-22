@@ -22,10 +22,16 @@ async function parseSongSaveRequest(request: Request): Promise<{ song: Song; opt
   }
 }
 
-export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
+function getRepositoryOptions(request: Request) {
+  return {
+    serializedSession: request.headers.get('cookie') || '',
+  }
+}
+
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   try {
-    const repo = createPocketbaseSongRepository()
+    const repo = createPocketbaseSongRepository(getRepositoryOptions(request))
     const getSongById = getSongByIdUseCase(repo)
     const song = await getSongById(id)
     if (!song) {
@@ -41,7 +47,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const repo = createPocketbaseSongRepository()
+  const repo = createPocketbaseSongRepository(getRepositoryOptions(request))
   const saveSong = saveSongUseCase(repo)
   const { song, options } = await parseSongSaveRequest(request)
 
@@ -54,9 +60,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   return Response.json(updated)
 }
 
-export async function DELETE(_: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const repo = createPocketbaseSongRepository()
+  const repo = createPocketbaseSongRepository(getRepositoryOptions(request))
   await repo.delete(id)
 
   return new Response(null, { status: 204 })

@@ -2,8 +2,14 @@ import { createCategoryUseCase } from "@/application/use-cases/categories/create
 import { getAllCategoriesUseCase } from "@/application/use-cases/categories/get-all-categories"
 import { createPocketbaseCategoryRepository } from "@/infrastructure/pocketbase/pocketbase-category.repository"
 
-export async function GET() {
-  const repo = createPocketbaseCategoryRepository()
+function getRepositoryOptions(request: Request) {
+  return {
+    serializedSession: request.headers.get("cookie") || "",
+  }
+}
+
+export async function GET(request: Request) {
+  const repo = createPocketbaseCategoryRepository(getRepositoryOptions(request))
   const getAllCategories = getAllCategoriesUseCase(repo)
 
   const categories = await getAllCategories()
@@ -19,7 +25,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const repo = createPocketbaseCategoryRepository()
+  const repo = createPocketbaseCategoryRepository(getRepositoryOptions(request))
   const createCategory = createCategoryUseCase(repo)
   const body = await request.json()
 

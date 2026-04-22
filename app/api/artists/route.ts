@@ -2,8 +2,14 @@ import { createPocketbaseArtistRepository } from "@/infrastructure/pocketbase/po
 import { createArtistUseCase } from "@/application/use-cases/artists/create-artist";
 import { getAllArtistsUseCase } from "@/application/use-cases/artists/get-all-artists";
 
-export async function GET() {
-  const repo = createPocketbaseArtistRepository()
+function getRepositoryOptions(request: Request) {
+  return {
+    serializedSession: request.headers.get("cookie") || "",
+  }
+}
+
+export async function GET(request: Request) {
+  const repo = createPocketbaseArtistRepository(getRepositoryOptions(request))
   const getAllArtists = getAllArtistsUseCase(repo)
 
   const artists = await getAllArtists()
@@ -26,7 +32,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const repo = createPocketbaseArtistRepository()
+  const repo = createPocketbaseArtistRepository(getRepositoryOptions(request))
   const createArtist = createArtistUseCase(repo)
   const body = await request.json()
 

@@ -56,6 +56,7 @@ export default function RootLayout({
                 </Link>
                 <div className="navbar-links">
                   <Link href="/" className="navbar-link">Músicas</Link>
+                  <Link href="/repertoires" className="navbar-link">Repertórios</Link>
                   <CreateSongNavLink />
                   <AuthNav />
                   <ThemeToggle />
