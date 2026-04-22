@@ -242,7 +242,7 @@ export function AddSongToRepertoireDialog({
             ) : null}
 
             {submitSuccess ? (
-              <p className="rounded-md border border-border bg-(--bg3) px-3 py-2 text-sm text-(--accent)">
+              <p className="rounded-md border border-border bg-(--bg3) px-3 py-2 text-sm text-accent">
                 {submitSuccess}
               </p>
             ) : null}
