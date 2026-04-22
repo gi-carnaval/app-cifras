@@ -20,6 +20,7 @@ export interface AuthenticatedUser {
   id: string
   name: string
   email: string
+  isVerified: boolean
 }
 
 export interface AuthSession {
