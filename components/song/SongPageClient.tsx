@@ -4,11 +4,11 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { transposeSong } from '@/core/chord-engine'
-import { Song } from '@/domain/entities/song'
+import type { Song } from '@/domain/entities/song'
 import { useAuthSession } from '@/features/auth/auth-session-provider'
 import SongViewer from './SongViewer'
 
-type ViewMode = 'chord' | 'pdf'
+type ViewMode = 'lyrics' | 'pdf'
 
 interface SongPageClientProps {
   initialSong: Song
@@ -23,14 +23,29 @@ function getPdfUrl(song: Song) {
   return `${baseUrl}/api/files/songs/${song.id}/${encodeURIComponent(song.cifraPDF)}`
 }
 
+function hasStructuredLyrics(song: Song) {
+  return song.sections.some((section) =>
+    section.lines.some((line) => line.lyrics.trim() || line.chords.length > 0)
+  )
+}
+
+function getInitialViewMode(song: Song) {
+  if (hasStructuredLyrics(song)) return 'lyrics'
+  if (getPdfUrl(song)) return 'pdf'
+
+  return 'lyrics'
+}
+
 export default function SongPageClient({ initialSong }: SongPageClientProps) {
   const { isAuthenticated } = useAuthSession()
   const [song, setSong] = useState(initialSong)
   const [steps, setSteps] = useState(0)
-  const [mode, setMode] = useState<ViewMode>('chord')
+  const [mode, setMode] = useState<ViewMode>(() => getInitialViewMode(initialSong))
   const [songFontSize, setSongFontSize] = useState(16)
   const [isPdfFullscreen, setIsPdfFullscreen] = useState(false)
   const pdfUrl = getPdfUrl(song)
+  const hasPdf = Boolean(pdfUrl)
+  const hasLyrics = hasStructuredLyrics(song)
   const visualConfig = {
     lyricFontSize: songFontSize,
     chordFontSize: Math.round(songFontSize),
@@ -64,6 +79,13 @@ export default function SongPageClient({ initialSong }: SongPageClientProps) {
     setSongFontSize(16)
   }
 
+  function selectMode(nextMode: ViewMode) {
+    if (nextMode === 'pdf' && !hasPdf) return
+
+    setIsPdfFullscreen(false)
+    setMode(nextMode)
+  }
+
   return (
     <main className="max-w-215 mx-auto my-0 pt-0 pb-28 sm:pb-20 px-6">
       <div className="song-toolbar">
@@ -77,130 +99,152 @@ export default function SongPageClient({ initialSong }: SongPageClientProps) {
         <div className="song-view-mode-toggle" aria-label="Modo de visualização">
           <Button
             type="button"
-            variant={mode === 'chord' ? 'default' : 'ghost'}
+            variant={mode === 'lyrics' ? 'default' : 'ghost'}
             size="sm"
-            onClick={() => setMode('chord')}
+            onClick={() => selectMode('lyrics')}
           >
-            Letra e Cifra
+            Letra e Acordes
           </Button>
           <Button
             type="button"
             variant={mode === 'pdf' ? 'default' : 'ghost'}
             size="sm"
-            onClick={() => setMode('pdf')}
+            disabled={!hasPdf}
+            onClick={() => selectMode('pdf')}
           >
             PDF
           </Button>
         </div>
+        {!hasPdf ? (
+          <span className="song-pdf-unavailable">PDF indisponível</span>
+        ) : null}
       </div>
 
-      {mode === 'chord' && (
+      {mode === 'lyrics' && (
         <>
-          <div className="hidden sm:flex items-center justify-between gap-3 flex-wrap py-2 mb-6 border-b border-border">
-            <div className="flex items-center gap-3">
-              <span className="transpose-label">Tom</span>
-              <div className="transpose-controls">
-                <button
-                  type="button"
-                  className="transpose-btn"
-                  onClick={() => applyTranspose(-1)}
-                >
-                  −1
-                </button>
-                <span className="transpose-value">
-                  {steps === 0 ? 'Original' : `${steps > 0 ? '+' : ''}${steps} st`}
-                </span>
-                <button
-                  type="button"
-                  className="transpose-btn"
-                  onClick={() => applyTranspose(+1)}
-                >
-                  +1
-                </button>
-                {steps !== 0 && (
-                  <button
-                    type="button"
-                    className="transpose-reset"
-                    onClick={resetTranspose}
-                    title="Voltar ao original"
-                  >
-                    ↺
-                  </button>
-                )}
+          {hasLyrics ? (
+            <>
+              <div className="hidden sm:flex items-center justify-between gap-3 flex-wrap py-2 mb-6 border-b border-border">
+                <div className="flex items-center gap-3">
+                  <span className="transpose-label">Tom</span>
+                  <div className="transpose-controls">
+                    <button
+                      type="button"
+                      className="transpose-btn"
+                      onClick={() => applyTranspose(-1)}
+                    >
+                      -1
+                    </button>
+                    <span className="transpose-value">
+                      {steps === 0 ? 'Original' : `${steps > 0 ? '+' : ''}${steps} st`}
+                    </span>
+                    <button
+                      type="button"
+                      className="transpose-btn"
+                      onClick={() => applyTranspose(+1)}
+                    >
+                      +1
+                    </button>
+                    {steps !== 0 && (
+                      <button
+                        type="button"
+                        className="transpose-reset"
+                        onClick={resetTranspose}
+                        title="Voltar ao original"
+                      >
+                        Reset
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="song-font-controls" aria-label="Tamanho da fonte">
+                  <span className="transpose-label">Fonte</span>
+                  <Button type="button" variant="outline" size="sm" onClick={decreaseFontSize}>
+                    A-
+                  </Button>
+                  <span className="song-font-value">{songFontSize}px</span>
+                  <Button type="button" variant="outline" size="sm" onClick={increaseFontSize}>
+                    A+
+                  </Button>
+                  {songFontSize !== 16 && (
+                    <Button type="button" variant="ghost" size="sm" onClick={resetFontSize}>
+                      Reset
+                    </Button>
+                  )}
+                </div>
               </div>
-            </div>
 
-            <div className="song-font-controls" aria-label="Tamanho da fonte">
-              <span className="transpose-label">Fonte</span>
-              <Button type="button" variant="outline" size="sm" onClick={decreaseFontSize}>
-                A-
-              </Button>
-              <span className="song-font-value">{songFontSize}px</span>
-              <Button type="button" variant="outline" size="sm" onClick={increaseFontSize}>
-                A+
-              </Button>
-              {songFontSize !== 16 && (
-                <Button type="button" variant="ghost" size="sm" onClick={resetFontSize}>
-                  Reset
+              <SongViewer song={song} visualConfig={visualConfig} />
+
+              <div
+                className="fixed inset-x-0 bottom-0 z-50 px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] sm:hidden"
+                role="toolbar"
+                aria-label="Ferramentas de leitura"
+              >
+                <div className="mx-auto flex max-w-sm items-center justify-between gap-2 rounded-lg border border-border bg-(--bg2) p-2 shadow-lg shadow-black/30">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className={mobileToolButtonClass}
+                    onClick={() => applyTranspose(-1)}
+                    aria-label="Diminuir tom"
+                  >
+                    <span className="text-sm font-semibold leading-none">-1</span>
+                    <span className="text-[0.65rem] leading-none opacity-70">Tom</span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className={mobileToolButtonClass}
+                    onClick={() => applyTranspose(+1)}
+                    aria-label="Aumentar tom"
+                  >
+                    <span className="text-sm font-semibold leading-none">+1</span>
+                    <span className="text-[0.65rem] leading-none opacity-70">Tom</span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className={mobileToolButtonClass}
+                    onClick={decreaseFontSize}
+                    aria-label="Diminuir fonte"
+                  >
+                    <span className="text-sm font-semibold leading-none">A-</span>
+                    <span className="text-[0.65rem] leading-none opacity-70">Fonte</span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className={mobileToolButtonClass}
+                    onClick={increaseFontSize}
+                    aria-label="Aumentar fonte"
+                  >
+                    <span className="text-sm font-semibold leading-none">A+</span>
+                    <span className="text-[0.65rem] leading-none opacity-70">Fonte</span>
+                  </Button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="song-pdf-empty">
+              <p>Não há letra e acordes estruturados para esta música.</p>
+              {hasPdf ? (
+                <Button type="button" onClick={() => selectMode('pdf')}>
+                  Ver PDF
                 </Button>
-              )}
+              ) : null}
+              {isAuthenticated ? (
+                <Button type="button" variant="outline" asChild>
+                  <Link href={`/song/${song.id}/edit`}>Editar música</Link>
+                </Button>
+              ) : null}
             </div>
-          </div>
-
-          <SongViewer song={song} visualConfig={visualConfig} />
-
-          <div
-            className="fixed inset-x-0 bottom-0 z-50 px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] sm:hidden"
-            role="toolbar"
-            aria-label="Ferramentas de leitura"
-          >
-            <div className="mx-auto flex max-w-sm items-center justify-between gap-2 rounded-lg border border-border bg-(--bg2) p-2 shadow-lg shadow-black/30">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className={mobileToolButtonClass}
-                onClick={() => applyTranspose(-1)}
-                aria-label="Diminuir tom"
-              >
-                <span className="text-sm font-semibold leading-none">-1</span>
-                <span className="text-[0.65rem] leading-none opacity-70">Tom</span>
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className={mobileToolButtonClass}
-                onClick={() => applyTranspose(+1)}
-                aria-label="Aumentar tom"
-              >
-                <span className="text-sm font-semibold leading-none">+1</span>
-                <span className="text-[0.65rem] leading-none opacity-70">Tom</span>
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className={mobileToolButtonClass}
-                onClick={decreaseFontSize}
-                aria-label="Diminuir fonte"
-              >
-                <span className="text-sm font-semibold leading-none">A-</span>
-                <span className="text-[0.65rem] leading-none opacity-70">Fonte</span>
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className={mobileToolButtonClass}
-                onClick={increaseFontSize}
-                aria-label="Aumentar fonte"
-              >
-                <span className="text-sm font-semibold leading-none">A+</span>
-                <span className="text-[0.65rem] leading-none opacity-70">Fonte</span>
-              </Button>
-            </div>
-          </div>
+          )}
         </>
       )}
 
