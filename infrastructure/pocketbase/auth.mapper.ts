@@ -17,5 +17,6 @@ export function toAuthenticatedUser(dto: PocketbaseUserDTO): AuthenticatedUser {
     id: dto.id,
     name: dto.name,
     email: dto.email,
+    isVerified: dto.verified === true,
   }
 }

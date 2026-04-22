@@ -1,10 +1,13 @@
 import type { Category } from "@/domain/entities/category"
 import type { CategoryRepository } from "@/domain/repositories/category.repository"
 import type { PocketbaseCategoryDTO } from "../api/dto/pocketbase-category-dto"
-import { pb } from "./client"
+import { createAuthenticatedPocketbaseClient, type PocketbaseRepositoryOptions } from "./client"
 import { toCategoryEntity, toPocketbaseCategoryDTO } from "./categories.mapper"
 
-export function createPocketbaseCategoryRepository(): CategoryRepository {
+export function createPocketbaseCategoryRepository(
+  options?: PocketbaseRepositoryOptions
+): CategoryRepository {
+  const pb = createAuthenticatedPocketbaseClient(options)
   const collection = "categories"
 
   async function getAll(): Promise<Category[]> {

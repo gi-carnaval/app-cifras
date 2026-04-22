@@ -1,10 +1,13 @@
-import { pb } from "./client";
+import { createAuthenticatedPocketbaseClient, type PocketbaseRepositoryOptions } from "./client";
 import { PocketbaseArtistDTO } from "../api/dto/pocketbase-artist-dto";
 import { ArtistRepository } from "@/domain/repositories/artist.repository";
 import { Artist } from "@/domain/entities/artist";
 import { toArtistEntity, toPocketbaseArtistDTO } from "./artists.mapper";
 
-export function createPocketbaseArtistRepository(): ArtistRepository {
+export function createPocketbaseArtistRepository(
+  options?: PocketbaseRepositoryOptions
+): ArtistRepository {
+  const pb = createAuthenticatedPocketbaseClient(options)
   const collection = "artists"
 
   async function getAll(): Promise<Artist[]> {

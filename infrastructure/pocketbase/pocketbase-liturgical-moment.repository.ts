@@ -1,10 +1,13 @@
-import { pb } from "./client"
+import { createAuthenticatedPocketbaseClient, type PocketbaseRepositoryOptions } from "./client"
 import { LiturgicalMoment } from "@/domain/entities/liturgicalMoment"
 import { LiturgicalMomentRepository } from "@/domain/repositories/liturgicalMoment.repository"
 import { toLiturgicalMomentEntity, toPocketbaseLiturgicalMomentDTO } from "./liturgicalMoment.mapper"
 import { PocketbaseLiturgicalMomentDTO } from "../api/dto/pocketbase-liturgical-moment-dto"
 
-export function createPocketbaseLiturgicalMomentRepository(): LiturgicalMomentRepository {
+export function createPocketbaseLiturgicalMomentRepository(
+  options?: PocketbaseRepositoryOptions
+): LiturgicalMomentRepository {
+  const pb = createAuthenticatedPocketbaseClient(options)
   const collection = "liturgical_moments"
 
   async function getAll(): Promise<LiturgicalMoment[]> {

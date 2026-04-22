@@ -1,6 +1,6 @@
 // infrastructure/repositories/pocketbase-song.repository.ts
 import { toPocketbaseSongDTO, toPocketbaseSongFormData, toSongEntity } from "./songs.mapper";
-import { pb } from "./client";
+import { createAuthenticatedPocketbaseClient, type PocketbaseRepositoryOptions } from "./client";
 import { Song } from "@/domain/entities/song";
 import { SongRepository } from "@/domain/repositories/song.repository";
 import { PocketbaseSongDTO } from "../api/dto/pocketbase-song-dto";
@@ -14,7 +14,10 @@ type PocketbaseSongRepository = SongRepository & {
   save(song: Song, options?: PocketbaseSongSaveOptions): Promise<Song>
 }
 
-export function createPocketbaseSongRepository(): PocketbaseSongRepository {
+export function createPocketbaseSongRepository(
+  options?: PocketbaseRepositoryOptions
+): PocketbaseSongRepository {
+  const pb = createAuthenticatedPocketbaseClient(options)
   const collection = "songs";
 
   async function getAll(): Promise<Song[]> {
