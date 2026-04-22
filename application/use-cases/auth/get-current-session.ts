@@ -5,6 +5,12 @@ import type {
 
 export function createGetCurrentSessionUseCase(repo: AuthRepository) {
   return async function getCurrentSession(serializedSession?: string): Promise<AuthSession> {
-    return repo.getCurrentSession(serializedSession)
+    const session = await repo.getCurrentSession(serializedSession)
+
+    if (session.user && !session.user.isVerified) {
+      return repo.clearSession()
+    }
+
+    return session
   }
 }

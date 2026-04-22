@@ -5,7 +5,13 @@ import type {
 } from '@/domain/repositories/auth.repository'
 
 export interface LoginUserResult {
+  status: 'success'
   user: AuthenticatedUser
+}
+
+export interface UnverifiedLoginUserResult {
+  status: 'unverified'
+  message: string
 }
 
 function normalizeEmail(email: string) {
@@ -31,10 +37,24 @@ function validateLoginUserInput(input: LoginUserInput) {
 }
 
 export function createLoginUserUseCase(repo: AuthRepository) {
-  return async function loginUser(input: LoginUserInput): Promise<LoginUserResult> {
+  return async function loginUser(
+    input: LoginUserInput
+  ): Promise<LoginUserResult | UnverifiedLoginUserResult> {
     const validInput = validateLoginUserInput(input)
     const user = await repo.login(validInput)
 
-    return { user }
+    if (!user.isVerified) {
+      await repo.clearSession()
+
+      return {
+        status: 'unverified',
+        message: 'Sua conta ainda não foi verificada.',
+      }
+    }
+
+    return {
+      status: 'success',
+      user,
+    }
   }
 }
