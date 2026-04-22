@@ -5,6 +5,7 @@ import Link from 'next/link'
 
 import { DataTableColumnHeader } from '@/components/data-table/data-table-column-header'
 import { DataTableRowActions } from '@/components/data-table/data-table-row-actions'
+import { toSongActionTarget } from '../types/song-action-target'
 import type { SongRow } from '../types/song-row'
 import { SongRowActions } from './song-row-actions'
 
@@ -38,7 +39,7 @@ export const songsColumns: ColumnDef<SongRow>[] = [
       <DataTableColumnHeader column={column} title="Tom" />
     ),
     cell: ({ row }) => (
-      <span className="font-mono text-(--accent)">{row.original.defaultKey}</span>
+      <span className="font-mono text-accent">{row.original.defaultKey}</span>
     ),
   },
   {
@@ -55,10 +56,7 @@ export const songsColumns: ColumnDef<SongRow>[] = [
     enableHiding: false,
     cell: ({ row }) => (
       <DataTableRowActions>
-        <SongRowActions
-          songId={row.original.id}
-          songTitle={row.original.title}
-        />
+        <SongRowActions song={toSongActionTarget(row.original)} />
       </DataTableRowActions>
     ),
   },

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 
+import { toSongActionTarget } from '../types/song-action-target'
 import type { SongRow } from '../types/song-row'
 import { SongRowActions } from './song-row-actions'
 
@@ -50,7 +51,7 @@ export function SongsMobileList({ songs }: SongsMobileListProps) {
                     {song.artistName}
                   </p>
                 </div>
-                <SongRowActions songId={song.id} songTitle={song.title} />
+                <SongRowActions song={toSongActionTarget(song)} />
               </div>
 
               <div className="mt-3 flex flex-wrap items-center gap-2">
