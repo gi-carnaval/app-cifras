@@ -27,6 +27,10 @@ function filterValue(value: string) {
   return value.replaceAll('"', '\\"')
 }
 
+function buildOrFilter(field: string, values: string[]) {
+  return values.map((value) => `${field} = "${filterValue(value)}"`).join(" || ")
+}
+
 export function createPocketbaseRepertoireRepository(
   options?: PocketbaseRepositoryOptions
 ): RepertoireRepository {
@@ -50,6 +54,17 @@ export function createPocketbaseRepertoireRepository(
     } catch {
       return null
     }
+  }
+
+  async function getByIds(ids: string[]): Promise<Repertoire[]> {
+    if (ids.length === 0) return []
+
+    const result = await pb.collection(collection).getFullList<PocketbaseRepertoireDTO>({
+      filter: buildOrFilter("id", ids),
+      sort: "-date,-created",
+    })
+
+    return result.map(toRepertoireEntity)
   }
 
   async function save(repertoire: Repertoire): Promise<Repertoire> {
@@ -83,6 +98,7 @@ export function createPocketbaseRepertoireRepository(
   return {
     getAllByOwner,
     getById,
+    getByIds,
     save,
     archive,
     delete: remove,
@@ -98,6 +114,17 @@ export function createPocketbaseRepertoireItemRepository(
   async function getByRepertoireId(repertoireId: string): Promise<RepertoireItem[]> {
     const result = await pb.collection(collection).getFullList<PocketbaseRepertoireItemDTO>({
       filter: `repertoire = "${filterValue(repertoireId)}"`,
+      sort: "position",
+    })
+
+    return result.map(toRepertoireItemEntity)
+  }
+
+  async function getByRepertoireIds(repertoireIds: string[]): Promise<RepertoireItem[]> {
+    if (repertoireIds.length === 0) return []
+
+    const result = await pb.collection(collection).getFullList<PocketbaseRepertoireItemDTO>({
+      filter: buildOrFilter("repertoire", repertoireIds),
       sort: "position",
     })
 
@@ -151,6 +178,7 @@ export function createPocketbaseRepertoireItemRepository(
 
   return {
     getByRepertoireId,
+    getByRepertoireIds,
     getById,
     add,
     update,
@@ -170,7 +198,6 @@ export function createPocketbaseRepertoireMemberRepository(
       filter: `repertoire = "${filterValue(repertoireId)}"`,
       sort: "created",
     })
-
     return result.map(toRepertoireMemberEntity)
   }
 

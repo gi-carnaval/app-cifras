@@ -2,12 +2,9 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { Montserrat } from "next/font/google";
 import { cn } from "@/lib/utils";
-import Link from 'next/link';
 import { ThemeProvider } from '@/components/theme/theme-provider';
-import ThemeToggle from '@/components/theme/theme-toggle';
 import { AuthSessionProvider } from '@/features/auth/auth-session-provider';
-import { AuthNav } from '@/features/auth/components/auth-nav';
-import { CreateSongNavLink } from '@/features/auth/components/create-song-nav-link';
+import { AppHeader } from '@/features/navigation/components/app-header';
 
 const montserrat = Montserrat({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -49,20 +46,7 @@ export default function RootLayout({
       <body className="bg-(--bg) text-(--text)">
         <ThemeProvider>
           <AuthSessionProvider>
-            <nav className="border-b border-border bg-(--bg)">
-              <div className="flex items-center justify-between max-w-215 mx-auto my-0 px-6 py-5">
-                <Link href="/" className="text-2xl font-black text-accent tracking-[-0.5px]">
-                  Cifras<span>App</span>
-                </Link>
-                <div className="navbar-links">
-                  <Link href="/" className="navbar-link">Músicas</Link>
-                  <Link href="/repertoires" className="navbar-link">Repertórios</Link>
-                  <CreateSongNavLink />
-                  <AuthNav />
-                  <ThemeToggle />
-                </div>
-              </div>
-            </nav>
+            <AppHeader />
             {children}
           </AuthSessionProvider>
         </ThemeProvider>

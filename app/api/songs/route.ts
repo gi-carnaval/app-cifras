@@ -31,8 +31,16 @@ function getRepositoryOptions(request: Request) {
 export async function GET(request: Request) {
   const repo = createPocketbaseSongRepository(getRepositoryOptions(request))
   const getAllSongs = getAllSongsUseCase(repo)
+  const url = new URL(request.url)
+  const search = url.searchParams.get('q') ?? ''
+  const artistId = url.searchParams.get('artist') ?? ''
+  const categoryIds = url.searchParams.getAll('category')
 
-  const songs = await getAllSongs()
+  const songs = await getAllSongs({
+    search,
+    artistId,
+    categoryIds,
+  })
 
   if (!songs) {
     return new Response(

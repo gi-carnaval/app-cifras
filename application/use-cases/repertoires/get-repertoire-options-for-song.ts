@@ -24,11 +24,10 @@ export function getRepertoireOptionsForSongUseCase(
 
     const ownedRepertoires = await repertoireRepo.getAllByOwner(userId)
     const sharedMembers = await memberRepo.getByUserId(userId)
-    const sharedRepertoires = (
-      await Promise.all(
-        sharedMembers.map((member) => repertoireRepo.getById(member.repertoireId))
-      )
-    ).filter((repertoire): repertoire is Repertoire => Boolean(repertoire))
+    const sharedRepertoireIds = Array.from(
+      new Set(sharedMembers.map((member) => member.repertoireId))
+    )
+    const sharedRepertoires = await repertoireRepo.getByIds(sharedRepertoireIds)
     const repertoires = Array.from(
       new Map(
         [...ownedRepertoires, ...sharedRepertoires].map((repertoire) => [
@@ -37,19 +36,27 @@ export function getRepertoireOptionsForSongUseCase(
         ])
       ).values()
     )
+    const items = await itemRepo.getByRepertoireIds(repertoires.map((repertoire) => repertoire.id))
+    const itemSummaryByRepertoireId = items.reduce<
+      Record<string, { itemsCount: number; hasSong: boolean }>
+    >((summary, item) => {
+      const current = summary[item.repertoireId] ?? {
+        itemsCount: 0,
+        hasSong: false,
+      }
 
-    const options = await Promise.all(
-      repertoires.map(async (repertoire) => {
-        const items = await itemRepo.getByRepertoireId(repertoire.id)
+      summary[item.repertoireId] = {
+        itemsCount: current.itemsCount + 1,
+        hasSong: current.hasSong || item.songId === songId,
+      }
 
-        return {
-          repertoire,
-          itemsCount: items.length,
-          hasSong: items.some((item) => item.songId === songId),
-        }
-      })
-    )
+      return summary
+    }, {})
 
-    return options
+    return repertoires.map((repertoire) => ({
+      repertoire,
+      itemsCount: itemSummaryByRepertoireId[repertoire.id]?.itemsCount ?? 0,
+      hasSong: itemSummaryByRepertoireId[repertoire.id]?.hasSong ?? false,
+    }))
   }
 }

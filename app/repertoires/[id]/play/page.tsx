@@ -3,10 +3,12 @@ import { cookies } from "next/headers"
 import { getRepertoireByIdUseCase } from "@/application/use-cases/repertoires/get-repertoire-by-id"
 import { getRepertoireItemsUseCase } from "@/application/use-cases/repertoires/get-repertoire-items"
 import { canAccessRepertoire } from "@/application/use-cases/repertoires/repertoire-access"
+import {
+  applyRepertoireItemKeyOverride,
+  getRepertoireItemEffectiveKeyLabel,
+} from "@/application/use-cases/repertoires/apply-repertoire-item-key-override"
 import { getSongByIdUseCase } from "@/application/use-cases/songs/get-song-by-id"
 import { requireAuthenticatedUser } from "@/app/auth/require-authenticated-user"
-import { formatChord } from "@/core/chord-engine"
-import type { Chord } from "@/types"
 import { createPocketbaseSongRepository } from "@/infrastructure/pocketbase/pocketbase.repository"
 import {
   createPocketbaseRepertoireItemRepository,
@@ -16,16 +18,6 @@ import {
 import { RepertoirePlayer, type RepertoirePlayerItem } from "./repertoire-player"
 
 export const dynamic = "force-dynamic"
-
-function formatOptionalChord(chord: Chord | null | undefined) {
-  if (!chord) return ""
-
-  try {
-    return formatChord(chord)
-  } catch {
-    return ""
-  }
-}
 
 function getInitialIndex(currentIndex: number, itemsLength: number) {
   if (!Number.isInteger(currentIndex)) return 0
@@ -70,12 +62,14 @@ export default async function RepertoirePlayerPage({
 
         if (!song) return null
 
+        const effectiveSong = applyRepertoireItemKeyOverride(song, item)
+
         return {
           id: item.id,
           position: item.position,
           notes: item.notes,
-          keyLabel: formatOptionalChord(item.customKey) || formatOptionalChord(song.defaultKey),
-          song,
+          keyLabel: getRepertoireItemEffectiveKeyLabel(song, item),
+          song: effectiveSong,
         }
       })
     )

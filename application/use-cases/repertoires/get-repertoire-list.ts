@@ -20,11 +20,10 @@ export function getRepertoireListUseCase(
 
     const ownedRepertoires = await repertoireRepo.getAllByOwner(ownerId)
     const sharedMembers = memberRepo ? await memberRepo.getByUserId(ownerId) : []
-    const sharedRepertoires = (
-      await Promise.all(
-        sharedMembers.map((member) => repertoireRepo.getById(member.repertoireId))
-      )
-    ).filter((repertoire): repertoire is Repertoire => Boolean(repertoire))
+    const sharedRepertoireIds = Array.from(
+      new Set(sharedMembers.map((member) => member.repertoireId))
+    )
+    const sharedRepertoires = await repertoireRepo.getByIds(sharedRepertoireIds)
     const repertoires = Array.from(
       new Map(
         [...ownedRepertoires, ...sharedRepertoires].map((repertoire) => [
@@ -33,16 +32,17 @@ export function getRepertoireListUseCase(
         ])
       ).values()
     )
-    const itemsByRepertoire = await Promise.all(
-      repertoires.map(async (repertoire) => ({
-        repertoire,
-        items: await itemRepo.getByRepertoireId(repertoire.id),
-      }))
-    )
 
-    return itemsByRepertoire.map(({ repertoire, items }) => ({
+    const items = await itemRepo.getByRepertoireIds(repertoires.map((repertoire) => repertoire.id))
+    const itemCountByRepertoireId = items.reduce<Record<string, number>>((counts, item) => {
+      counts[item.repertoireId] = (counts[item.repertoireId] ?? 0) + 1
+
+      return counts
+    }, {})
+
+    return repertoires.map((repertoire) => ({
       repertoire,
-      itemsCount: items.length,
+      itemsCount: itemCountByRepertoireId[repertoire.id] ?? 0,
     }))
   }
 }

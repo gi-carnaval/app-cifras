@@ -73,7 +73,7 @@ export function RepertoirePlayer({
 
   return (
     <main className="mx-auto my-0 max-w-6xl px-4 pb-28 pt-0 sm:px-6 sm:pb-20">
-      <div className="sticky top-0 z-30 -mx-4 border-b border-border bg-(--bg)/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
+      <div className="-mx-4 border-b border-border bg-(--bg)/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
         <div className="mx-auto flex max-w-6xl flex-col gap-3">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">

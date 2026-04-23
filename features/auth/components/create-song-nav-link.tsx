@@ -2,9 +2,14 @@
 
 import Link from 'next/link'
 
+import { Button } from '@/components/ui/button'
 import { useAuthSession } from '../auth-session-provider'
 
-export function CreateSongNavLink() {
+type CreateSongNavLinkProps = {
+  className?: string
+}
+
+export function CreateSongNavLink({ className }: CreateSongNavLinkProps = {}) {
   const { isAuthenticated } = useAuthSession()
 
   if (!isAuthenticated) {
@@ -12,8 +17,8 @@ export function CreateSongNavLink() {
   }
 
   return (
-    <Link href="/song/create" className="navbar-link">
-      <span className="btn-primary btn-sm">+ Nova Música</span>
-    </Link>
+    <Button asChild size="sm" className={className}>
+      <Link href="/song/create">+ Nova Música</Link>
+    </Button>
   )
 }

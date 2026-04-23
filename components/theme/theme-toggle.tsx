@@ -2,6 +2,7 @@
 
 import type { ComponentType } from 'react'
 import { MonitorIcon, MoonIcon, SunIcon } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { useTheme, type Theme } from './theme-provider'
 
@@ -15,7 +16,12 @@ const themeOptions: Array<{
   { value: 'system', label: 'Sistema', icon: MonitorIcon },
 ]
 
-export default function ThemeToggle() {
+type ThemeToggleProps = {
+  className?: string
+  labelClassName?: string
+}
+
+export default function ThemeToggle({ className, labelClassName }: ThemeToggleProps = {}) {
   const { theme, setTheme } = useTheme()
   const currentThemeIndex = themeOptions.findIndex((option) => option.value === theme)
   const CurrentIcon = themeOptions[currentThemeIndex]?.icon ?? MonitorIcon
@@ -31,12 +37,13 @@ export default function ThemeToggle() {
       type="button"
       variant="outline"
       size="sm"
+      className={className}
       aria-label={`Tema atual: ${themeOptions[currentThemeIndex]?.label ?? 'Sistema'}`}
       title="Alternar tema"
       onClick={cycleTheme}
     >
       <CurrentIcon className="size-4" />
-      <span className="hidden sm:inline">
+      <span className={cn("hidden sm:inline", labelClassName)}>
         {themeOptions[currentThemeIndex]?.label ?? 'Sistema'}
       </span>
     </Button>

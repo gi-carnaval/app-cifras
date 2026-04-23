@@ -11,6 +11,7 @@ export type RepertoireItemPosition = Pick<RepertoireItem, "id" | "position">
 export interface RepertoireRepository {
   getAllByOwner(ownerId: string): Promise<Repertoire[]>
   getById(id: string): Promise<Repertoire | null>
+  getByIds(ids: string[]): Promise<Repertoire[]>
   save(repertoire: Repertoire): Promise<Repertoire>
   archive(id: string): Promise<Repertoire>
   delete(id: string): Promise<void>
@@ -18,6 +19,7 @@ export interface RepertoireRepository {
 
 export interface RepertoireItemRepository {
   getByRepertoireId(repertoireId: string): Promise<RepertoireItem[]>
+  getByRepertoireIds(repertoireIds: string[]): Promise<RepertoireItem[]>
   getById(id: string): Promise<RepertoireItem | null>
   add(item: NewRepertoireItem): Promise<RepertoireItem>
   update(item: RepertoireItem): Promise<RepertoireItem>

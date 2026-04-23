@@ -8,6 +8,10 @@ export const chromaticScale = [
   'F#', 'G', 'G#', 'A', 'A#', 'B',
 ]
 
+const flatMap: Record<string, string> = {
+  Db: 'C#', Eb: 'D#', Fb: 'E', Gb: 'F#', Ab: 'G#', Bb: 'A#', Cb: 'B',
+}
+
 // ─── parseChord ───────────────────────────────────────────────────────────────
 
 /**
@@ -69,9 +73,6 @@ function transposeNote(
   accidental: '#' | 'b' | undefined,
   steps: number,
 ): { root: string; accidental?: '#' | 'b' } {
-  const flatMap: Record<string, string> = {
-    Db: 'C#', Eb: 'D#', Fb: 'E', Gb: 'F#', Ab: 'G#', Bb: 'A#', Cb: 'B',
-  }
   const note = root + (accidental ?? '')
   const normalised = flatMap[note] ?? note
   const idx = chromaticScale.indexOf(normalised)
@@ -119,6 +120,21 @@ export function transposeSong(sections: Section[], steps: number): Section[] {
     ...sec,
     lines: sec.lines.map((line) => transposeLine(line, steps)),
   }))
+}
+
+export function getTranspositionSteps(fromChord: Chord, toChord: Chord): number {
+  const fromNote = fromChord.root + (fromChord.accidental ?? '')
+  const toNote = toChord.root + (toChord.accidental ?? '')
+  const normalisedFrom = flatMap[fromNote] ?? fromNote
+  const normalisedTo = flatMap[toNote] ?? toNote
+  const fromIndex = chromaticScale.indexOf(normalisedFrom)
+  const toIndex = chromaticScale.indexOf(normalisedTo)
+
+  if (fromIndex === -1 || toIndex === -1) {
+    throw new Error(`getTranspositionSteps: unsupported key change "${fromNote}" -> "${toNote}"`)
+  }
+
+  return toIndex - fromIndex
 }
 
 // ─── Responsive Rendering ────────────────────────────────────────────────────

@@ -2,7 +2,7 @@
 import { toPocketbaseSongDTO, toPocketbaseSongFormData, toSongEntity } from "./songs.mapper";
 import { createAuthenticatedPocketbaseClient, type PocketbaseRepositoryOptions } from "./client";
 import { Song } from "@/domain/entities/song";
-import { SongRepository } from "@/domain/repositories/song.repository";
+import { SongRepository, type SongListFilters } from "@/domain/repositories/song.repository";
 import { PocketbaseSongDTO } from "../api/dto/pocketbase-song-dto";
 
 interface PocketbaseSongSaveOptions {
@@ -14,15 +14,56 @@ type PocketbaseSongRepository = SongRepository & {
   save(song: Song, options?: PocketbaseSongSaveOptions): Promise<Song>
 }
 
+function filterValue(value: string) {
+  return value.replaceAll("\\", "\\\\").replaceAll('"', '\\"')
+}
+
+function buildSongSearchFilter(search: string) {
+  const trimmedSearch = search.trim()
+
+  if (!trimmedSearch) return ""
+
+  const escapedSearch = filterValue(trimmedSearch)
+
+  return `(title ~ "${escapedSearch}" || sections ~ "${escapedSearch}")`
+}
+
+function buildArtistFilter(artistId: string) {
+  const trimmedArtistId = artistId.trim()
+
+  if (!trimmedArtistId) return ""
+
+  return `artist = "${filterValue(trimmedArtistId)}"`
+}
+
+function buildCategoryFilter(categoryIds: string[]) {
+  if (categoryIds.length === 0) return ""
+
+  return `(${categoryIds.map((categoryId) => `categories ~ "${filterValue(categoryId)}"`).join(" || ")})`
+}
+
+function buildSongsFilter(filters?: SongListFilters) {
+  const parts = [
+    buildSongSearchFilter(filters?.search ?? ""),
+    buildArtistFilter(filters?.artistId ?? ""),
+    buildCategoryFilter(filters?.categoryIds ?? []),
+  ].filter(Boolean)
+
+  return parts.join(" && ")
+}
+
 export function createPocketbaseSongRepository(
   options?: PocketbaseRepositoryOptions
 ): PocketbaseSongRepository {
   const pb = createAuthenticatedPocketbaseClient(options)
   const collection = "songs";
 
-  async function getAll(): Promise<Song[]> {
+  async function getAll(filters?: SongListFilters): Promise<Song[]> {
+    const filter = buildSongsFilter(filters)
     const result = await pb.collection(collection).getFullList<PocketbaseSongDTO>({
       expand: "artist, categories, liturgical_moments",
+      filter: filter || undefined,
+      sort: "title",
     });
     return result.map(toSongEntity);
   }
