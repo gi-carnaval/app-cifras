@@ -40,7 +40,7 @@ export default async function HomePage({
 }: {
   searchParams: HomePageSearchParams
 }) {
-  await requireAuthenticatedUser('/')
+  // await requireAuthenticatedUser('/')
   const resolvedSearchParams = await searchParams
   const search = getSingleSearchParamValue(resolvedSearchParams.q).trim()
   const artistId = getSingleSearchParamValue(resolvedSearchParams.artist).trim()

@@ -11,7 +11,7 @@ interface SongPageProps {
 
 export default async function SongPage({ params }: SongPageProps) {
   const { id } = await params
-  await requireAuthenticatedUser(`/song/${id}`)
+  // await requireAuthenticatedUser(`/song/${id}`)
   const cookieStore = await cookies()
   const repo = createPocketbaseSongRepository({
     serializedSession: cookieStore.toString(),
