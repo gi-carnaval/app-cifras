@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { splitLineForRender, chordsForChunk, formatChord } from '@/core/chord-engine'
+import { useChordNotation } from '@/components/chord-notation/chord-notation-provider'
 import { Line } from '@/domain/entities/song'
 
 const DEFAULT_CHAR_WIDTH = 9.6
@@ -12,6 +13,7 @@ interface CifraLineProps {
 }
 
 export default function CifraLine({ line }: CifraLineProps) {
+  const { notation } = useChordNotation()
   const containerRef = useRef<HTMLDivElement>(null)
   const measureRef = useRef<HTMLSpanElement>(null)
   const [containerWidth, setContainerWidth] = useState<number>(800)
@@ -73,7 +75,7 @@ export default function CifraLine({ line }: CifraLineProps) {
                   className="chord"
                   style={{ left: `${item.relativeIndex * charWidth}px` }}
                 >
-                  {formatChord(item.chord)}
+                  {formatChord(item.chord, { notation })}
                 </span>
               ))}
             </div>

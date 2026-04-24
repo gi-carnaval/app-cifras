@@ -14,14 +14,37 @@ const flatMap: Record<string, string> = {
 
 // ─── parseChord ───────────────────────────────────────────────────────────────
 
+function normalizeBrazilianMainChordNotation(value: string) {
+  return value
+    .replace(/7\+$/u, 'maj7')
+    .replace(/[º°]/gu, 'dim')
+}
+
+/**
+ * Normalizes accepted input notation into the engine canonical format.
+ *
+ * This is intentionally separate from parsing so the system can accept
+ * multiple user-facing notations while preserving a single internal source
+ * of truth for parsing, storage, and transposition.
+ */
+export function normalizeChordInput(input: string): string {
+  const trimmedInput = input.trim()
+
+  if (!trimmedInput) return trimmedInput
+
+  const [mainChord, bassSuffix = ''] = trimmedInput.split('/', 2)
+
+  return `${normalizeBrazilianMainChordNotation(mainChord)}${bassSuffix ? `/${bassSuffix}` : ''}`
+}
+
 /**
  * Parses a chord string into a structured Chord object.
  *
- * Supports: C  C#  Cb  Cm  C#m7  C#m7/G#  B5(9)  Cmaj7  Csus2  Cadd9  etc.
- * Throws on invalid input — does NOT attempt to auto-correct.
+ * Supports canonical engine notation plus accepted input variants that are
+ * normalized first, eg. F7+ -> Fmaj7 and G#º -> G#dim.
  */
 export function parseChord(input: string): Chord {
-  const s = input.trim()
+  const s = normalizeChordInput(input)
   if (!s) throw new Error(`parseChord: empty input`)
 
   // Regex anatomy:
@@ -54,10 +77,27 @@ export function parseChord(input: string): Chord {
 /**
  * Serialises a Chord back to its canonical string representation.
  */
-export function formatChord(chord: Chord): string {
+export type ChordNotation = 'international' | 'brazilian'
+
+type FormatChordOptions = {
+  notation?: ChordNotation
+}
+
+function formatChordQuality(quality: string | undefined, notation: ChordNotation) {
+  if (!quality) return ''
+  if (notation === 'brazilian') {
+    if (quality === 'maj7') return '7+'
+    if (quality === 'dim') return 'º'
+  }
+
+  return quality
+}
+
+export function formatChord(chord: Chord, options?: FormatChordOptions): string {
+  const notation = options?.notation ?? 'international'
   let s = chord.root
   if (chord.accidental) s += chord.accidental
-  if (chord.quality) s += chord.quality
+  s += formatChordQuality(chord.quality, notation)
   if (chord.extension) s += chord.extension
   if (chord.bass) {
     s += '/' + chord.bass.root

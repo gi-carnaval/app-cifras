@@ -5,7 +5,6 @@ import { getRepertoireItemsUseCase } from "@/application/use-cases/repertoires/g
 import { canAccessRepertoire } from "@/application/use-cases/repertoires/repertoire-access"
 import {
   applyRepertoireItemKeyOverride,
-  getRepertoireItemEffectiveKeyLabel,
 } from "@/application/use-cases/repertoires/apply-repertoire-item-key-override"
 import { getSongByIdUseCase } from "@/application/use-cases/songs/get-song-by-id"
 import { requireAuthenticatedUser } from "@/app/auth/require-authenticated-user"
@@ -68,7 +67,6 @@ export default async function RepertoirePlayerPage({
           id: item.id,
           position: item.position,
           notes: item.notes,
-          keyLabel: getRepertoireItemEffectiveKeyLabel(song, item),
           song: effectiveSong,
         }
       })

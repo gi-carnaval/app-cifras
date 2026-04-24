@@ -167,7 +167,9 @@ export function useSongEditorController(
       parseChord(popupInput.trim())
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message.replace('parseChord: ', '') : 'valor inválido'
-      setPopupError(`Acorde inválido: ${message}`)
+      setPopupError(
+        `Acorde inválido: ${message}. Use notação internacional ou brasileira, por exemplo Fmaj7/F7+ e G#dim/G#º.`
+      )
       return
     }
     setSong((s) => {

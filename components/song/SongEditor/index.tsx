@@ -4,6 +4,7 @@ import { useState, type KeyboardEvent } from 'react'
 import {
   formatChord,
 } from '@/core/chord-engine'
+import { useChordNotation } from '@/components/chord-notation/chord-notation-provider'
 import { Song } from '@/domain/entities/song'
 import CifraLine from '../CifraLine'
 import SongCategoriesSelect from './SongMeta/SongCategoriesSelect'
@@ -23,6 +24,7 @@ interface SongEditorProps {
 }
 
 export default function SongEditor({ initialSong, onSave }: SongEditorProps) {
+  const { notation } = useChordNotation()
   const [selectedPdfFile, setSelectedPdfFile] = useState<File | null>(null)
   const controller = useSongEditorController(initialSong, onSave)
 
@@ -143,7 +145,7 @@ export default function SongEditor({ initialSong, onSave }: SongEditorProps) {
             </div>
             {popupError && <p className="popup-error">{popupError}</p>}
             <div className="popup-hint">
-              Suporta: Am · C# · Cmaj7 · C#m7/G# · B5(9)
+              Suporta: Am · C# · Cmaj7/F7+ · G#dim/G#º · C#m7/G# · B5(9)
             </div>
           </div>
         </>
@@ -326,7 +328,9 @@ export default function SongEditor({ initialSong, onSave }: SongEditorProps) {
                         >
                           {"<"}
                         </button>
-                        <span className="chord-tag-value">{formatChord(cp.chord)}</span>
+                        <span className="chord-tag-value">
+                          {formatChord(cp.chord, { notation })}
+                        </span>
                         <button
                           type="button"
                           className="chord-tag-shift"

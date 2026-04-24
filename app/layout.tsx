@@ -3,6 +3,7 @@ import './globals.css'
 import { Montserrat } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from '@/components/theme/theme-provider';
+import { ChordNotationProvider } from '@/components/chord-notation/chord-notation-provider';
 import { AuthSessionProvider } from '@/features/auth/auth-session-provider';
 import { AppHeader } from '@/features/navigation/components/app-header';
 
@@ -45,10 +46,12 @@ export default function RootLayout({
       </head>
       <body className="bg-(--bg) text-(--text)">
         <ThemeProvider>
-          <AuthSessionProvider>
-            <AppHeader />
-            {children}
-          </AuthSessionProvider>
+          <ChordNotationProvider>
+            <AuthSessionProvider>
+              <AppHeader />
+              {children}
+            </AuthSessionProvider>
+          </ChordNotationProvider>
         </ThemeProvider>
       </body>
     </html>

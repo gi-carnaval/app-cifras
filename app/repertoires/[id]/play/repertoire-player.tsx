@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react"
 import Link from "next/link"
+import { formatChord } from "@/core/chord-engine"
+import { useChordNotation } from "@/components/chord-notation/chord-notation-provider"
 import { Button } from "@/components/ui/button"
 import SongViewer from "@/components/song/SongViewer"
 import type { Song } from "@/domain/entities/song"
@@ -10,7 +12,6 @@ export type RepertoirePlayerItem = {
   id: string
   position: number
   notes: string
-  keyLabel: string
   song: Song
 }
 
@@ -31,11 +32,15 @@ export function RepertoirePlayer({
   initialIndex,
   items,
 }: RepertoirePlayerProps) {
+  const { notation } = useChordNotation()
   const [currentIndex, setCurrentIndex] = useState(() =>
     items.length > 0 ? clampIndex(initialIndex, items.length - 1) : 0
   )
   const currentItem = items[currentIndex] ?? null
   const progressLabel = currentItem ? `${currentIndex + 1} de ${items.length}` : "0 de 0"
+  const currentKeyLabel = currentItem
+    ? formatChord(currentItem.song.defaultKey, { notation })
+    : "-"
   const visualConfig = useMemo(
     () => ({
       lyricFontSize: 18,
@@ -146,7 +151,7 @@ export function RepertoirePlayer({
                 Posição {currentItem.position}
               </span>
               <span className="inline-flex min-h-7 items-center rounded-md border border-border bg-(--surface) px-2.5 font-mono text-xs font-medium text-(--accent)">
-                Tom {currentItem.keyLabel || "-"}
+                Tom {currentKeyLabel}
               </span>
             </div>
           </div>

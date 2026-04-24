@@ -5,8 +5,10 @@ import { MenuIcon } from "lucide-react"
 
 import { AuthNav } from "@/features/auth/components/auth-nav"
 import { CreateSongNavLink } from "@/features/auth/components/create-song-nav-link"
+import { ChordNotationToggle } from "@/components/chord-notation/chord-notation-toggle"
 import ThemeToggle from "@/components/theme/theme-toggle"
 import { Button } from "@/components/ui/button"
+import { DesktopUserMenu } from "./desktop-user-menu"
 import {
   Dialog,
   DialogClose,
@@ -53,8 +55,13 @@ export function AppHeader() {
         <div className="hidden items-center gap-2 md:flex">
           <CreateSongNavLink />
           <div className="h-6 w-px bg-border" />
-          <AuthNav />
-          <ThemeToggle />
+          <AuthNav
+            linkClassName={desktopNavLinkClassName}
+            containerClassName="flex items-center gap-2"
+            userClassName="hidden"
+            buttonClassName="hidden"
+          />
+          <DesktopUserMenu />
         </div>
 
         <Dialog>
@@ -78,7 +85,10 @@ export function AppHeader() {
                 <DialogTitle className="text-base font-semibold text-(--text)">
                   Navegação
                 </DialogTitle>
-                <ThemeToggle className="shrink-0" labelClassName="inline" />
+                <div className="flex items-center gap-2">
+                  <ChordNotationToggle className="shrink-0" labelClassName="inline" />
+                  <ThemeToggle className="shrink-0" labelClassName="inline" />
+                </div>
               </div>
               <DialogDescription className="text-(--text-muted)">
                 Acesse músicas, repertórios e ações da sua conta sem ocupar a largura da tela.

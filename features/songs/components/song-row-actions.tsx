@@ -91,12 +91,12 @@ export function SongRowActions({ song }: SongRowActionsProps) {
           <>
           <button
             type="button"
-            className="fixed inset-0 z-40 cursor-default"
+            className="fixed inset-0 z-[var(--z-popover-backdrop)] cursor-default"
             aria-label="Fechar ações"
             onClick={() => setIsOpen(false)}
           />
           <div
-            className="fixed z-50 min-w-36 overflow-hidden rounded-md border border-border bg-popover text-popover-foreground shadow-md"
+            className="fixed z-[var(--z-popover)] min-w-36 overflow-hidden rounded-md border border-border bg-popover text-popover-foreground shadow-md"
             style={{
               top: menuPosition.top,
               right: menuPosition.right,

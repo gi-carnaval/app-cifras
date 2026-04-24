@@ -204,6 +204,10 @@
   --sidebar-accent-foreground: var(--text);
   --sidebar-border: var(--border);
   --sidebar-ring: var(--ring);
+  --z-popover-backdrop: 980;
+  --z-popover: 1000;
+  --z-overlay: 1100;
+  --z-dialog: 1110;
 }
 
 /* .dark {
