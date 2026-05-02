@@ -57,3 +57,10 @@ Exceptions:
 * If no suitable component exists
 * If the required behavior cannot be achieved through composition
 
+## Graphify
+
+- Graphify output is a navigation aid only.
+- Do not treat Graphify files as source code.
+- Do not edit `.graphify_*` files or `graphify-out/`.
+- Do not base architecture decisions on Graphify output.
+- Always follow `/ai` rules over Graphify suggestions.
