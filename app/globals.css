@@ -458,6 +458,18 @@ button {
   font-weight: 300;
   letter-spacing: 0.5px;
 }
+.song-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 6px;
+}
+.song-meta-item {
+  color: var(--accent);
+  font-size: 1rem;
+  font-weight: 300;
+  letter-spacing: 0.5px;
+}
 .section-block {
   margin-bottom: 36px;
 }

@@ -13,6 +13,14 @@ interface PocketbaseSongSaveOptions {
   removeCifraPdf?: boolean
 }
 
+function toCapo(value: PocketbaseSongDTO["capo"]): Song["capo"] {
+  if (value === undefined || value === null) return undefined
+  if (typeof value !== 'number' || Number.isNaN(value)) return undefined
+  if (!Number.isInteger(value) || value < 0) return undefined
+
+  return value
+}
+
 function toSections(value: PocketbaseSongDTO["sections"]): Section[] {
   return Array.isArray(value) ? value as unknown as Section[] : []
 }
@@ -59,6 +67,7 @@ export function toSongEntity(dto: PocketbaseSongDTO): Song {
     id: dto.id,
     title: dto.title,
     artist: toArtist(dto),
+    capo: toCapo(dto.capo),
     defaultKey: parseChord(dto.default_key) || "",
     categories: toCategories(dto),
     liturgicalMoments: toLiturgicalMoments(dto),
@@ -71,6 +80,7 @@ export function toPocketbaseSongDTO(song: Song): PocketbaseSongDTO {
   return {
     id: song.id,
     title: song.title,
+    capo: song.capo ?? 0,
     artist: song.artist.id,
     categories: song.categories.map((category) => category.id),
     liturgical_moments: song.liturgicalMoments.map(moment => moment.id),
@@ -84,6 +94,7 @@ export function toPocketbaseSongFormData(song: Song, options?: PocketbaseSongSav
   const formData = new FormData()
 
   formData.set("title", song.title)
+  formData.set("capo", String(song.capo ?? 0))
   formData.set("artist", song.artist.id)
   formData.set("default_key", formatChord(song.defaultKey))
   formData.set("sections", JSON.stringify(song.sections))

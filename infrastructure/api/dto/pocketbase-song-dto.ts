@@ -7,6 +7,7 @@ export interface PocketbaseSongDTO {
   collectionName?: string,
   id: string,
   title: string,
+  capo?: number | null,
   default_key: string,
   sections: JSON,
   artist: string,

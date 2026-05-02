@@ -20,6 +20,7 @@ import { buildLiturgicalMomentOptions, normalizeLiturgicalMomentsWithOptions } f
 import { updateSongCategories } from '@/application/use-cases/songs/update-song-categories'
 import { updateSongLiturgicalMoments } from '@/application/use-cases/songs/update-song-liturgical-moments'
 import { buildSongToSave } from '@/application/use-cases/songs/build-song-to-save'
+import { duplicateSongSection } from './duplicate-song-section'
 
 interface PopupState {
   visible: boolean
@@ -56,6 +57,21 @@ function reorderSections(sections: Section[], sectionId: string, direction: -1 |
     if (index === targetIndex) return sections[currentIndex]
     return section
   })
+}
+
+function insertDuplicatedSection(sections: Section[], sectionId: string) {
+  const sourceSection = sections.find((section) => section.id === sectionId)
+
+  if (!sourceSection) return sections
+
+  const sourceIndex = sections.findIndex((section) => section.id === sectionId)
+  const duplicatedSection = duplicateSongSection(sourceSection)
+
+  return [
+    ...sections.slice(0, sourceIndex + 1),
+    duplicatedSection,
+    ...sections.slice(sourceIndex + 1),
+  ]
 }
 
 interface SongEditorSaveOptions {
@@ -210,7 +226,9 @@ export function useSongEditorController(
 
   // ─── Song meta ──────────────────────────────────────────────────────────────
 
-  function updateMeta(field: 'title', value: string) {
+  function updateMeta(field: 'title', value: string): void
+  function updateMeta(field: 'capo', value: number | undefined): void
+  function updateMeta(field: 'title' | 'capo', value: string | number | undefined) {
     setSong((s) => ({ ...s, [field]: value }))
   }
 
@@ -296,6 +314,10 @@ export function useSongEditorController(
 
   function moveSectionDown(sectionId: string) {
     setSong((s) => ({ ...s, sections: reorderSections(s.sections, sectionId, 1) }))
+  }
+
+  function duplicateSection(sectionId: string) {
+    setSong((s) => ({ ...s, sections: insertDuplicatedSection(s.sections, sectionId) }))
   }
 
   // ─── Line management ────────────────────────────────────────────────────────
@@ -447,6 +469,7 @@ export function useSongEditorController(
     handleMoveChord,
     updateSectionName,
     removeSection,
+    duplicateSection,
     moveSectionUp,
     moveSectionDown,
     createArtist,

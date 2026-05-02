@@ -22,6 +22,7 @@ export type Song = {
   categories: Category[]
   liturgicalMoments: LiturgicalMoment[]
   sections: Section[]
+  capo?: number
   defaultKey: Chord
   cifraPDF: string
 }

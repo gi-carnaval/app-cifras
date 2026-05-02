@@ -28,6 +28,19 @@ function getRepositoryOptions(request: Request) {
   }
 }
 
+function toSongSaveErrorResponse(error: unknown) {
+  if (error instanceof SyntaxError) {
+    return new Response('Payload da música é inválido.', { status: 400 })
+  }
+
+  if (error instanceof Error && error.name === 'SongValidationError') {
+    return new Response(error.message, { status: 400 })
+  }
+
+  console.error('Erro ao salvar música:', error)
+  return new Response('Erro ao salvar a música.', { status: 500 })
+}
+
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   try {
@@ -46,18 +59,22 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 }
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
-  const repo = createPocketbaseSongRepository(getRepositoryOptions(request))
-  const saveSong = saveSongUseCase(repo)
-  const { song, options } = await parseSongSaveRequest(request)
+  try {
+    const { id } = await params
+    const repo = createPocketbaseSongRepository(getRepositoryOptions(request))
+    const saveSong = saveSongUseCase(repo)
+    const { song, options } = await parseSongSaveRequest(request)
 
-  if (!song.artist?.id) {
-    return new Response('Artista é obrigatório.', { status: 400 })
+    if (!song.artist?.id) {
+      return new Response('Artista é obrigatório.', { status: 400 })
+    }
+
+    const updated = await saveSong({ ...song, id }, options)
+
+    return Response.json(updated)
+  } catch (error) {
+    return toSongSaveErrorResponse(error)
   }
-
-  const updated = await saveSong({ ...song, id }, options)
-
-  return Response.json(updated)
 }
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {

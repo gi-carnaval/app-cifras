@@ -12,6 +12,7 @@ import SongArtistSelect from './SongMeta/SongArtistSelect'
 import SongLiturgicalMomentsSelect from './SongMeta/SongLiturgicalMomentsSelect'
 import { useSongEditorController } from '@/features/song-editor/useSongEditorController'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import SongPdfUpload from './SongPdfUpload'
 
 interface SongEditorSaveOptions {
@@ -76,6 +77,7 @@ export default function SongEditor({ initialSong, onSave }: SongEditorProps) {
     handleRemoveChord,
     handleMoveChord,
     removeSection,
+    duplicateSection,
     moveSectionUp,
     moveSectionDown,
     updateSectionName,
@@ -170,7 +172,7 @@ export default function SongEditor({ initialSong, onSave }: SongEditorProps) {
             <span className="text-xs font-semibold uppercase tracking-[0.14em] text-(--text-dim)">
               Identidade
             </span>
-            <div className="grid gap-4 sm:grid-cols-[6rem_minmax(0,1fr)]">
+            <div className="grid gap-4 sm:grid-cols-[6rem_6rem_minmax(0,1fr)]">
               <div className="flex flex-col gap-2">
                 <label
                   htmlFor="song-key-input"
@@ -184,6 +186,29 @@ export default function SongEditor({ initialSong, onSave }: SongEditorProps) {
                   placeholder="Tom"
                   value={defaultKey}
                   onChange={(e) => updateDefaultKey(e.target.value)}
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label
+                  htmlFor="song-capo-input"
+                  className="text-sm font-medium text-(--text-muted)"
+                >
+                  Capo
+                </label>
+                <Input
+                  id="song-capo-input"
+                  type="number"
+                  min={0}
+                  step={1}
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={song.capo ?? ''}
+                  onChange={(event) => {
+                    const { value } = event.currentTarget
+                    if (!/^\d*$/.test(value)) return
+
+                    updateMeta('capo', value === '' ? undefined : Number.parseInt(value, 10))
+                  }}
                 />
               </div>
               <SongArtistSelect
@@ -247,6 +272,9 @@ export default function SongEditor({ initialSong, onSave }: SongEditorProps) {
                   placeholder="Nome do trecho"
                 />
                 <div className="flex items-center gap-2">
+                  <button className="btn-ghost" onClick={() => duplicateSection(section.id)}>
+                    Duplicar trecho
+                  </button>
                   <button className="btn-ghost btn-danger" onClick={() => removeSection(section.id)}>
                     Remover trecho
                   </button>
