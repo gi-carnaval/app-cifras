@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react"
 import Link from "next/link"
 import { getSongKeyMetadata } from "@/application/use-cases/songs/get-song-key-metadata"
 import { useChordNotation } from "@/components/chord-notation/chord-notation-provider"
@@ -50,6 +50,8 @@ const AUTO_SCROLL_VELOCITY_BY_LEVEL: Record<AutoScrollSpeedLevel, number> = {
 }
 const DEFAULT_AUTO_SCROLL_SPEED_LEVEL: AutoScrollSpeedLevel = 3
 const AUTO_SCROLL_INTERVAL_MS = 16
+const MOBILE_CONTROLS_HIDE_DELAY_MS = 3200
+const MOBILE_TAP_MOVE_THRESHOLD = 12
 const CURRENT_INDEX_PERSIST_DEBOUNCE_MS = 800
 const DEFAULT_LYRICS_VISUALIZATION_MODE: LyricsVisualizationMode = "lyrics-with-chords"
 
@@ -188,12 +190,16 @@ export function RepertoirePlayer({
   const [autoScrollSpeedLevel, setAutoScrollSpeedLevel] = useState(readStoredAutoScrollSpeed)
   const [lyricsVisualizationMode, setLyricsVisualizationMode] = useState(readStoredLyricsVisualizationMode)
   const [isAutoScrolling, setIsAutoScrolling] = useState(false)
+  const [isMobileControlsVisible, setIsMobileControlsVisible] = useState(true)
   const [viewMode, setViewMode] = useState<PlayerViewMode>(() =>
     items.length > 0 ? getInitialViewMode(items[clampIndex(initialIndex, items.length - 1)]?.song) : "lyrics"
   )
   const lyricsScrollAreaRef = useRef<HTMLDivElement | null>(null)
   const autoScrollIntervalRef = useRef<number | null>(null)
   const autoScrollRemainderRef = useRef(0)
+  const mobileControlsHideTimeoutRef = useRef<number | null>(null)
+  const contentPointerStateRef = useRef<{ x: number, y: number } | null>(null)
+  const contentPointerMovedRef = useRef(false)
   const persistTimeoutRef = useRef<number | null>(null)
   const lastPersistedIndexRef = useRef(initialIndex)
   const pendingPersistIndexRef = useRef<number | null>(null)
@@ -209,6 +215,7 @@ export function RepertoirePlayer({
   const hasLyrics = currentItem ? hasStructuredLyrics(currentItem.song) : false
   const pdfUrl = currentItem ? getPdfUrl(currentItem.song) : null
   const hasPdf = Boolean(pdfUrl)
+  const hasLyricsContentView = hasLyrics && viewMode === "lyrics"
   const currentSongMetadata = currentItem
     ? getSongKeyMetadata({
       defaultKey: currentItem.song.defaultKey,
@@ -228,6 +235,14 @@ export function RepertoirePlayer({
   useEffect(() => {
     window.localStorage.setItem(PLAYER_LYRICS_VISUALIZATION_MODE_STORAGE_KEY, lyricsVisualizationMode)
   }, [lyricsVisualizationMode])
+
+  useEffect(() => {
+    scheduleMobileControlsHide()
+
+    return () => {
+      clearMobileControlsHideTimeout()
+    }
+  }, [])
 
   async function persistCurrentIndex(index: number) {
     if (index === lastPersistedIndexRef.current) {
@@ -274,6 +289,30 @@ export function RepertoirePlayer({
 
     autoScrollRemainderRef.current = 0
     setIsAutoScrolling(false)
+  }
+
+  function clearMobileControlsHideTimeout() {
+    if (mobileControlsHideTimeoutRef.current !== null) {
+      window.clearTimeout(mobileControlsHideTimeoutRef.current)
+      mobileControlsHideTimeoutRef.current = null
+    }
+  }
+
+  function scheduleMobileControlsHide() {
+    clearMobileControlsHideTimeout()
+    mobileControlsHideTimeoutRef.current = window.setTimeout(() => {
+      setIsMobileControlsVisible(false)
+    }, MOBILE_CONTROLS_HIDE_DELAY_MS)
+  }
+
+  function showMobileControls() {
+    setIsMobileControlsVisible(true)
+    scheduleMobileControlsHide()
+  }
+
+  function hideMobileControls() {
+    clearMobileControlsHideTimeout()
+    setIsMobileControlsVisible(false)
   }
 
   function resetScrollToTop() {
@@ -339,6 +378,7 @@ export function RepertoirePlayer({
   function toggleAutoScroll() {
     if (!hasLyrics || viewMode !== "lyrics") return
 
+    showMobileControls()
     setIsAutoScrolling((currentValue) => !currentValue)
   }
 
@@ -347,11 +387,57 @@ export function RepertoirePlayer({
       stopAutoScroll()
     }
 
+    showMobileControls()
     setViewMode(mode)
   }
 
   function selectLyricsVisualizationMode(mode: LyricsVisualizationMode) {
+    showMobileControls()
     setLyricsVisualizationMode(mode)
+  }
+
+  function handleContentPointerDown(event: ReactPointerEvent<HTMLElement>) {
+    if (event.pointerType === "mouse") {
+      return
+    }
+
+    contentPointerStateRef.current = {
+      x: event.clientX,
+      y: event.clientY,
+    }
+    contentPointerMovedRef.current = false
+  }
+
+  function handleContentPointerMove(event: ReactPointerEvent<HTMLElement>) {
+    const pointerState = contentPointerStateRef.current
+
+    if (!pointerState) {
+      return
+    }
+
+    const distanceX = Math.abs(event.clientX - pointerState.x)
+    const distanceY = Math.abs(event.clientY - pointerState.y)
+
+    if (distanceX > MOBILE_TAP_MOVE_THRESHOLD || distanceY > MOBILE_TAP_MOVE_THRESHOLD) {
+      contentPointerMovedRef.current = true
+    }
+  }
+
+  function handleContentPointerUp(event: ReactPointerEvent<HTMLElement>) {
+    if (event.pointerType === "mouse") {
+      return
+    }
+
+    const wasTap = !contentPointerMovedRef.current
+
+    contentPointerStateRef.current = null
+    contentPointerMovedRef.current = false
+
+    if (!wasTap || isMobileControlsVisible) {
+      return
+    }
+
+    showMobileControls()
   }
 
   useEffect(() => {
@@ -365,6 +451,19 @@ export function RepertoirePlayer({
 
     resetScrollToTop()
   }, [currentItem?.id, hasLyrics, viewMode])
+
+  useEffect(() => {
+    if (!isMobileControlsVisible) {
+      clearMobileControlsHideTimeout()
+      return
+    }
+
+    scheduleMobileControlsHide()
+
+    return () => {
+      clearMobileControlsHideTimeout()
+    }
+  }, [currentIndex, isFocusMode, isMobileControlsVisible, viewMode])
 
   useEffect(() => {
     if (!hasMountedRef.current) {
@@ -485,11 +584,64 @@ export function RepertoirePlayer({
 
   return (
     <main className={isFocusMode
-      ? "min-h-screen bg-[radial-gradient(circle_at_top,color-mix(in_oklab,var(--accent)_14%,transparent)_0%,transparent_34%),linear-gradient(180deg,color-mix(in_oklab,var(--bg)_96%,var(--surface))_0%,color-mix(in_oklab,var(--bg)_88%,var(--bg2))_100%)] pb-40 pt-3 sm:pb-44"
-      : "min-h-screen bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.06),_transparent_42%),linear-gradient(180deg,var(--bg)_0%,color-mix(in_oklab,var(--bg)_88%,black)_100%)] pb-40 pt-3 sm:pb-44 md:pt-4"}
+      ? "min-h-screen bg-[radial-gradient(circle_at_top,color-mix(in_oklab,var(--accent)_14%,transparent)_0%,transparent_34%),linear-gradient(180deg,color-mix(in_oklab,var(--bg)_96%,var(--surface))_0%,color-mix(in_oklab,var(--bg)_88%,var(--bg2))_100%)] pb-16 pt-3 md:pb-44"
+      : "min-h-screen bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.06),_transparent_42%),linear-gradient(180deg,var(--bg)_0%,color-mix(in_oklab,var(--bg)_88%,black)_100%)] pb-16 pt-3 md:pb-44 md:pt-4"}
     >
+      <div className="md:hidden fixed inset-x-0 top-0 z-40 px-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] pointer-events-none">
+        <div
+          data-mobile-controls="true"
+          onPointerDown={showMobileControls}
+          className={isMobileControlsVisible
+            ? "pointer-events-auto mx-auto flex max-w-5xl items-center justify-between gap-3 rounded-[20px] border border-border/80 bg-(--bg)/90 px-3 py-2 shadow-lg shadow-black/15 backdrop-blur transition-all duration-200"
+            : "pointer-events-none mx-auto flex max-w-5xl -translate-y-3 items-center justify-between gap-3 rounded-[20px] border border-border/80 bg-(--bg)/90 px-3 py-2 opacity-0 shadow-lg shadow-black/15 backdrop-blur transition-all duration-200"}
+        >
+          <div className="min-w-0">
+            <p className="truncate text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-(--text-muted)">
+              {repertoireName}
+            </p>
+            <p className="truncate text-sm font-semibold text-(--text)">
+              {currentItem.song.title || "Sem título"}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="inline-flex min-h-9 items-center rounded-full border border-border bg-(--surface) px-3 text-sm font-semibold text-(--accent)">
+              {progressLabel}
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                showMobileControls()
+                setIsSongListOpen(true)
+              }}
+              className="rounded-full"
+            >
+              Lista
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (isFocusMode) {
+                  setIsFocusMode(false)
+                  showMobileControls()
+                  return
+                }
+
+                hideMobileControls()
+              }}
+              className="rounded-full"
+            >
+              {isFocusMode ? "Sair do foco" : "Ocultar"}
+            </Button>
+          </div>
+        </div>
+      </div>
+
       {!isFocusMode ? (
-        <div className="sticky top-0 z-30 px-3 pb-3 sm:px-5">
+        <div className="hidden md:block sticky top-0 z-30 px-3 pb-3 sm:px-5">
         <div className="mx-auto flex max-w-5xl flex-col gap-3 rounded-[24px] border border-border/80 bg-(--bg)/92 px-4 py-3 shadow-lg shadow-black/15 backdrop-blur md:px-5">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
@@ -640,7 +792,7 @@ export function RepertoirePlayer({
         </div>
       </div>
       ) : (
-        <div className="sticky top-0 z-30 px-3 pb-2 sm:px-5">
+        <div className="hidden md:block sticky top-0 z-30 px-3 pb-2 sm:px-5">
           <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 rounded-[20px] border border-border/80 bg-(--bg)/88 px-3 py-2 shadow-lg shadow-black/15 backdrop-blur">
             <div className="min-w-0">
               <p className="truncate text-xs font-semibold uppercase tracking-[0.14em] text-(--text-muted)">
@@ -699,7 +851,12 @@ export function RepertoirePlayer({
         </div>
       )}
 
-      <section className="mx-auto mt-2 max-w-5xl px-3 sm:px-5">
+      <section
+        className="mx-auto mt-2 max-w-5xl px-3 sm:px-5"
+        onPointerDown={handleContentPointerDown}
+        onPointerMove={handleContentPointerMove}
+        onPointerUp={handleContentPointerUp}
+      >
         {!isFocusMode && currentItem.notes ? (
           <div className="mb-4 rounded-[20px] border border-border/80 bg-(--bg2) px-4 py-3 shadow-xs">
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-(--text-muted)">
@@ -715,8 +872,12 @@ export function RepertoirePlayer({
           <div
             ref={lyricsScrollAreaRef}
             className={isFocusMode
-              ? "max-h-[calc(100vh-11.5rem)] overflow-y-auto rounded-[28px] border border-border/80 bg-(--bg)/86 px-4 py-5 shadow-2xl shadow-black/15 sm:max-h-[calc(100vh-12.5rem)] sm:px-6 sm:py-6"
-              : "max-h-[calc(100vh-16rem)] overflow-y-auto rounded-[28px] border border-border/80 bg-(--bg2) px-4 py-5 shadow-xl shadow-black/10 sm:max-h-[calc(100vh-17rem)] sm:px-6 sm:py-6"}
+              ? (isMobileControlsVisible
+                ? "max-h-[calc(100vh-15rem)] overflow-y-auto rounded-[28px] border border-border/80 bg-(--bg)/86 px-4 py-5 shadow-2xl shadow-black/15 md:max-h-[calc(100vh-12.5rem)] md:px-6 md:py-6"
+                : "max-h-[calc(100vh-6rem)] overflow-y-auto rounded-[28px] border border-border/80 bg-(--bg)/86 px-4 py-5 shadow-2xl shadow-black/15 md:max-h-[calc(100vh-12.5rem)] md:px-6 md:py-6")
+              : (isMobileControlsVisible
+                ? "max-h-[calc(100vh-19rem)] overflow-y-auto rounded-[28px] border border-border/80 bg-(--bg2) px-4 py-5 shadow-xl shadow-black/10 md:max-h-[calc(100vh-17rem)] md:px-6 md:py-6"
+                : "max-h-[calc(100vh-10rem)] overflow-y-auto rounded-[28px] border border-border/80 bg-(--bg2) px-4 py-5 shadow-xl shadow-black/10 md:max-h-[calc(100vh-17rem)] md:px-6 md:py-6")}
           >
             <SongViewer song={currentItem.song} visualConfig={visualConfig} />
           </div>
@@ -768,7 +929,9 @@ export function RepertoirePlayer({
         ) : null}
       </section>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 px-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 sm:px-5">
+      <div className="md:hidden pointer-events-none fixed inset-x-0 bottom-0 z-30 h-36 bg-[linear-gradient(180deg,transparent_0%,color-mix(in_oklab,var(--bg)_18%,transparent)_35%,color-mix(in_oklab,var(--bg)_92%,transparent)_100%)] transition-opacity duration-200" style={{ opacity: isMobileControlsVisible ? 1 : 0 }} />
+
+      <div className="hidden md:block fixed inset-x-0 bottom-0 z-40 px-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 sm:px-5">
         <div className={isFocusMode
           ? "mx-auto flex max-w-4xl flex-col gap-2 rounded-[24px] border border-border/80 bg-(--bg)/92 p-2 shadow-2xl shadow-black/20 backdrop-blur"
           : "mx-auto flex max-w-3xl flex-col gap-2 rounded-[24px] border border-border/80 bg-(--bg)/94 p-2 shadow-2xl shadow-black/25 backdrop-blur"}
@@ -927,6 +1090,212 @@ export function RepertoirePlayer({
               className="min-h-14 rounded-[18px] text-base font-semibold"
             >
               Próxima
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="md:hidden fixed inset-x-0 bottom-0 z-40 px-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 pointer-events-none">
+        <div
+          data-mobile-controls="true"
+          onPointerDown={showMobileControls}
+          className={isMobileControlsVisible
+            ? "pointer-events-auto mx-auto flex max-w-5xl translate-y-0 flex-col gap-2 rounded-[24px] border border-border/80 bg-(--bg)/94 p-2 shadow-2xl shadow-black/20 backdrop-blur transition-all duration-200"
+            : "pointer-events-none mx-auto flex max-w-5xl translate-y-6 flex-col gap-2 rounded-[24px] border border-border/80 bg-(--bg)/94 p-2 opacity-0 shadow-2xl shadow-black/20 backdrop-blur transition-all duration-200"}
+        >
+          {hasLyricsContentView ? (
+            <div className="grid grid-cols-[minmax(0,1fr)_auto_auto_auto_auto] items-center gap-2">
+              <Button
+                type="button"
+                variant={isAutoScrolling ? "default" : "outline"}
+                size="sm"
+                onClick={toggleAutoScroll}
+                className="min-h-10 rounded-[14px] px-3 font-semibold"
+              >
+                {isAutoScrolling ? "Pausar" : "Auto-scroll"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={decreaseAutoScrollSpeed}
+                disabled={autoScrollSpeedLevel <= AUTO_SCROLL_SPEED_LEVELS[0]}
+                className="min-h-10 rounded-[14px] px-3 font-semibold"
+              >
+                -
+              </Button>
+              <div className="flex min-w-[4.5rem] flex-col items-center justify-center px-2 text-center">
+                <span className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-(--text-muted)">
+                  Vel.
+                </span>
+                <span className="text-sm font-bold text-(--text)">{autoScrollSpeedLevel}</span>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={increaseAutoScrollSpeed}
+                disabled={autoScrollSpeedLevel >= AUTO_SCROLL_SPEED_LEVELS[AUTO_SCROLL_SPEED_LEVELS.length - 1]}
+                className="min-h-10 rounded-[14px] px-3 font-semibold"
+              >
+                +
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  stopAutoScroll()
+                  resetScrollToTop()
+                  showMobileControls()
+                }}
+                className="min-h-10 rounded-[14px] px-3 text-xs font-semibold"
+              >
+                Topo
+              </Button>
+            </div>
+          ) : null}
+
+          {hasLyrics ? (
+            <div className="flex items-center justify-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  decreaseFontSize()
+                  showMobileControls()
+                }}
+                disabled={fontSize <= MIN_PLAYER_FONT_SIZE}
+                className="min-h-10 rounded-[14px] px-3 font-semibold"
+              >
+                A-
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  resetFontSize()
+                  showMobileControls()
+                }}
+                disabled={fontSize === DEFAULT_PLAYER_FONT_SIZE}
+                className="min-h-10 rounded-[14px] px-3 text-xs font-semibold"
+              >
+                Reset
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  increaseFontSize()
+                  showMobileControls()
+                }}
+                disabled={fontSize >= MAX_PLAYER_FONT_SIZE}
+                className="min-h-10 rounded-[14px] px-3 font-semibold"
+              >
+                A+
+              </Button>
+            </div>
+          ) : null}
+
+          {hasLyrics ? (
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                type="button"
+                variant={lyricsVisualizationMode === "lyrics-with-chords" ? "default" : "outline"}
+                size="sm"
+                onClick={() => selectLyricsVisualizationMode("lyrics-with-chords")}
+                className="min-h-10 rounded-[14px] px-3 text-xs font-semibold"
+              >
+                Letra e Cifras
+              </Button>
+              <Button
+                type="button"
+                variant={lyricsVisualizationMode === "lyrics-only" ? "default" : "outline"}
+                size="sm"
+                onClick={() => selectLyricsVisualizationMode("lyrics-only")}
+                className="min-h-10 rounded-[14px] px-3 text-xs font-semibold"
+              >
+                Apenas Letra
+              </Button>
+            </div>
+          ) : null}
+
+          <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              onClick={() => {
+                goToPrevious()
+                showMobileControls()
+              }}
+              disabled={currentIndex === 0}
+              className="min-h-14 rounded-[18px] text-base font-semibold"
+            >
+              Anterior
+            </Button>
+            <div className="flex min-w-[5.5rem] flex-col items-center justify-center px-2 text-center">
+              <span className="text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-(--text-muted)">
+                Faixa
+              </span>
+              <span className="text-base font-bold text-(--text)">{progressLabel}</span>
+            </div>
+            <Button
+              type="button"
+              variant="default"
+              size="lg"
+              onClick={() => {
+                goToNext()
+                showMobileControls()
+              }}
+              disabled={currentIndex === items.length - 1}
+              className="min-h-14 rounded-[18px] text-base font-semibold"
+            >
+              Próxima
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2">
+            <Button
+              type="button"
+              variant={viewMode === "lyrics" ? "default" : "outline"}
+              size="sm"
+              onClick={() => selectViewMode("lyrics")}
+              disabled={!hasLyrics}
+              className="min-h-10 rounded-[14px] px-3 text-xs font-semibold"
+            >
+              Cifra
+            </Button>
+            <Button
+              type="button"
+              variant={viewMode === "pdf" ? "default" : "outline"}
+              size="sm"
+              onClick={() => selectViewMode("pdf")}
+              disabled={!hasPdf}
+              className="min-h-10 rounded-[14px] px-3 text-xs font-semibold"
+            >
+              PDF
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (isFocusMode) {
+                  setIsFocusMode(false)
+                  showMobileControls()
+                  return
+                }
+
+                setIsFocusMode(true)
+                showMobileControls()
+              }}
+              className="min-h-10 rounded-[14px] px-3 text-xs font-semibold"
+            >
+              {isFocusMode ? "Sair do foco" : "Modo foco"}
             </Button>
           </div>
         </div>
