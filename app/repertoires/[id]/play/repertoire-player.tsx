@@ -41,12 +41,12 @@ const DEFAULT_PLAYER_FONT_SIZE = 20
 const MIN_PLAYER_FONT_SIZE = 16
 const MAX_PLAYER_FONT_SIZE = 30
 const AUTO_SCROLL_SPEED_LEVELS = [1, 2, 3, 4, 5] as const
-const AUTO_SCROLL_PIXEL_STEP_BY_LEVEL: Record<AutoScrollSpeedLevel, number> = {
-  1: 1,
-  2: 2,
-  3: 3,
-  4: 4,
-  5: 5,
+const AUTO_SCROLL_VELOCITY_BY_LEVEL: Record<AutoScrollSpeedLevel, number> = {
+  1: 6,
+  2: 12,
+  3: 24,
+  4: 36,
+  5: 48,
 }
 const DEFAULT_AUTO_SCROLL_SPEED_LEVEL: AutoScrollSpeedLevel = 3
 const AUTO_SCROLL_INTERVAL_MS = 16
@@ -97,8 +97,8 @@ function mapStoredAutoScrollSpeedLevel(value: number): AutoScrollSpeedLevel {
   return 5
 }
 
-function getAutoScrollPixelStep(level: AutoScrollSpeedLevel) {
-  return AUTO_SCROLL_PIXEL_STEP_BY_LEVEL[level]
+function getAutoScrollVelocity(level: AutoScrollSpeedLevel) {
+  return AUTO_SCROLL_VELOCITY_BY_LEVEL[level]
 }
 
 function getMaxScrollTop(element: HTMLDivElement) {
@@ -193,6 +193,7 @@ export function RepertoirePlayer({
   )
   const lyricsScrollAreaRef = useRef<HTMLDivElement | null>(null)
   const autoScrollIntervalRef = useRef<number | null>(null)
+  const autoScrollRemainderRef = useRef(0)
   const persistTimeoutRef = useRef<number | null>(null)
   const lastPersistedIndexRef = useRef(initialIndex)
   const pendingPersistIndexRef = useRef<number | null>(null)
@@ -271,6 +272,7 @@ export function RepertoirePlayer({
       autoScrollIntervalRef.current = null
     }
 
+    autoScrollRemainderRef.current = 0
     setIsAutoScrolling(false)
   }
 
@@ -279,6 +281,7 @@ export function RepertoirePlayer({
 
     if (!scrollArea) return
 
+    autoScrollRemainderRef.current = 0
     scrollArea.scrollTo({
       top: 0,
       behavior: "auto",
@@ -418,6 +421,7 @@ export function RepertoirePlayer({
       window.clearInterval(autoScrollIntervalRef.current)
     }
 
+    autoScrollRemainderRef.current = 0
     autoScrollIntervalRef.current = window.setInterval(() => {
       const currentScrollArea = lyricsScrollAreaRef.current
 
@@ -433,8 +437,17 @@ export function RepertoirePlayer({
         return
       }
 
-      const distance = getAutoScrollPixelStep(autoScrollSpeedLevel)
-      const nextScrollTop = Math.min(currentScrollArea.scrollTop + distance, currentMaxScrollTop)
+      const velocity = getAutoScrollVelocity(autoScrollSpeedLevel)
+      const nextDistance = autoScrollRemainderRef.current + (velocity * AUTO_SCROLL_INTERVAL_MS) / 1000
+      const wholePixels = Math.floor(nextDistance)
+
+      autoScrollRemainderRef.current = nextDistance - wholePixels
+
+      if (wholePixels <= 0) {
+        return
+      }
+
+      const nextScrollTop = Math.min(currentScrollArea.scrollTop + wholePixels, currentMaxScrollTop)
 
       currentScrollArea.scrollTop = nextScrollTop
 
