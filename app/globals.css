@@ -836,6 +836,11 @@ button {
   margin-bottom: 2px;
 }
 
+.cifra-chunk-lyrics-only {
+  padding-top: 0;
+  margin-bottom: 6px;
+}
+
 /* ── Transpose Bar ──────────────────────────────────────────── */
 .transpose-bar {
   display: flex;

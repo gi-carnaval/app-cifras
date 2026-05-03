@@ -8,6 +8,7 @@ import {
 } from "@/application/use-cases/repertoires/apply-repertoire-item-key-override"
 import { getSongByIdUseCase } from "@/application/use-cases/songs/get-song-by-id"
 import { requireAuthenticatedUser } from "@/app/auth/require-authenticated-user"
+import { formatChord } from "@/core/chord-engine"
 import { createPocketbaseSongRepository } from "@/infrastructure/pocketbase/pocketbase.repository"
 import {
   createPocketbaseRepertoireItemRepository,
@@ -67,6 +68,7 @@ export default async function RepertoirePlayerPage({
           id: item.id,
           position: item.position,
           notes: item.notes,
+          customKeyLabel: item.customKey ? formatChord(item.customKey) : null,
           song: effectiveSong,
         }
       })

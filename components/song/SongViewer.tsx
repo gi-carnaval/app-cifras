@@ -9,6 +9,7 @@ import CifraLine from './CifraLine'
 export interface SongVisualConfig {
   lyricFontSize: number
   chordFontSize: number
+  showChords?: boolean
 }
 
 interface SongViewerProps {
@@ -18,11 +19,12 @@ interface SongViewerProps {
 
 export default function SongViewer({ song, visualConfig }: SongViewerProps) {
   const { notation } = useChordNotation()
+  const showChords = visualConfig?.showChords ?? true
   const viewerStyle = visualConfig
     ? {
       '--song-lyrics-font-size': `${visualConfig.lyricFontSize}px`,
       '--song-chord-font-size': `${visualConfig.chordFontSize}px`,
-      '--song-chord-row-height': `${Math.max(20, visualConfig.chordFontSize + 9)}px`,
+      '--song-chord-row-height': showChords ? `${Math.max(20, visualConfig.chordFontSize + 9)}px` : '0px',
     } as CSSProperties
     : undefined
   const { keyLabel, capoLabel } = getSongKeyMetadata({
@@ -51,7 +53,7 @@ export default function SongViewer({ song, visualConfig }: SongViewerProps) {
             <h2 className="section-name">{section.name}</h2>
             <div className="section-lines">
               {section.lines.map((line) => (
-                <CifraLine key={line.id} line={line} />
+                <CifraLine key={line.id} line={line} showChords={showChords} />
               ))}
             </div>
           </section>

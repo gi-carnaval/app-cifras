@@ -10,9 +10,10 @@ const CHAR_WIDTH_SAMPLE = 'mmmmmmmmmmmmmmmmmmmm'
 
 interface CifraLineProps {
   line: Line
+  showChords?: boolean
 }
 
-export default function CifraLine({ line }: CifraLineProps) {
+export default function CifraLine({ line, showChords = true }: CifraLineProps) {
   const { notation } = useChordNotation()
   const containerRef = useRef<HTMLDivElement>(null)
   const measureRef = useRef<HTMLSpanElement>(null)
@@ -66,21 +67,21 @@ export default function CifraLine({ line }: CifraLineProps) {
         const chordItems = chordsForChunk(line.chords, chunk)
 
         return (
-          <div key={i} className="cifra-chunk">
-            {/* Chord layer */}
-            <div className="chords-layer" aria-hidden="true">
-              {chordItems.map((item) => (
-                <span
-                  key={item.absoluteIndex}
-                  className="chord"
-                  style={{ left: `${item.relativeIndex * charWidth}px` }}
-                >
-                  {formatChord(item.chord, { notation })}
-                </span>
-              ))}
-            </div>
+          <div key={i} className={showChords ? 'cifra-chunk' : 'cifra-chunk cifra-chunk-lyrics-only'}>
+            {showChords ? (
+              <div className="chords-layer" aria-hidden="true">
+                {chordItems.map((item) => (
+                  <span
+                    key={item.absoluteIndex}
+                    className="chord"
+                    style={{ left: `${item.relativeIndex * charWidth}px` }}
+                  >
+                    {formatChord(item.chord, { notation })}
+                  </span>
+                ))}
+              </div>
+            ) : null}
 
-            {/* Lyrics layer */}
             <div className="lyrics">{chunk.text || '\u00A0'}</div>
           </div>
         )
